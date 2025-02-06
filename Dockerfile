@@ -67,6 +67,7 @@ RUN pyenv local 3.13.0 && \
     poetry lock && \
     poetry install -E torch --no-interaction --no-ansi --no-root
 
+RUN poetry run pip install --break-system-packages timesfm[torch]
 
 # Default command: launch an interactive bash shell.
 CMD ["/bin/bash"]
