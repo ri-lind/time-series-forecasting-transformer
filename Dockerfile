@@ -72,4 +72,5 @@ RUN poetry run pip install --break-system-packages timesfm[torch]
 EXPOSE 8888
 
 # Default command: launch an interactive bash shell.
-CMD ["/bin/bash"]
+EXPOSE 8888
+CMD ["/bin/bash", "-c", "source /etc/profile.d/pyenv.sh && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"]
