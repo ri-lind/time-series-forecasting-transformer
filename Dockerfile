@@ -50,24 +50,19 @@ RUN mkdir -p /etc/profile.d && \
 
 # Install additional Python versions via pyenv.
 # Here we install Python 3.10.16 and Python 3.13.0.
-RUN pyenv install 3.10.16 && \
-    pyenv install 3.13.0 && \
-    pyenv rehash
+RUN pyenv install 3.10 && \
+    pyenv rehash && \
+    pyenv global 3.10.16
 
 # Set up the project working directory.
 WORKDIR /code
 
-# Copy Poetry configuration files first to leverage Docker caching.
-# Ensure these files are in your build context.
-COPY poetry.lock pyproject.toml /code/
+COPY requirements.txt /code/
 
-# Set the local Python version and install project dependencies with Poetry.
-# The extra group "torch" is installed here; adjust as needed.
-RUN pyenv local 3.13.0 && \
-    poetry lock && \
-    poetry install -E torch --no-interaction --no-ansi --no-root
-
+RUN pip install -r requirements.txt
 
 # Default command: launch an interactive bash shell.
 EXPOSE 8888
-CMD ["/bin/bash", "-c", "source /etc/profile.d/pyenv.sh && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"]
+CMD ["/bin/bash"]
+
+#CMD ["/bin/bash", "-c", "source /etc/profile.d/pyenv.sh && jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root --NotebookApp.token=''"]

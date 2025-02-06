@@ -1,0 +1,2 @@
+timesfm[pax]
+jupyterlab
