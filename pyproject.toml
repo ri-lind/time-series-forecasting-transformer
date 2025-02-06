@@ -7,7 +7,7 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    # Add your regular dependencies here
+    "jupyterlab"
 ]
 
 [project.optional-dependencies]

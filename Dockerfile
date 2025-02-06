@@ -69,5 +69,7 @@ RUN pyenv local 3.13.0 && \
 
 RUN poetry run pip install --break-system-packages timesfm[torch]
 
+EXPOSE 8888
+
 # Default command: launch an interactive bash shell.
 CMD ["/bin/bash"]
