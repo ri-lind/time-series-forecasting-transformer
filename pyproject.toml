@@ -7,13 +7,12 @@ authors = [
 ]
 requires-python = ">=3.11"
 dependencies = [
-    "jupyterlab"
-]
+    "jupyterlab",
+    "torch",
+    "tensorflow",
+    "timesfm[torch]",
+    "torchvision
 
-[project.optional-dependencies]
-torch = [
-    "torch>=1.12.0",
-    "torchvision>=0.13.0"
 ]
 
 [build-system]
