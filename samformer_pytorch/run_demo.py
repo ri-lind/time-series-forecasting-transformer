@@ -49,7 +49,7 @@ if __name__ == '__main__':
     path_to_file = "dataset/ETTh1.csv"
     (x_train, y_train), (x_val, y_val), (x_test, y_test) = read_ETTh1_dataset(seq_len=512, pred_len=96)
     # train model
-    model = SAMFormer(device='cpu', num_epochs=100, batch_size=256, base_optimizer=torch.optim.Adam, 
+    model = SAMFormer(device='gpu', num_epochs=100, batch_size=256, base_optimizer=torch.optim.Adam, 
                       learning_rate=1e-3, weight_decay=1e-5, rho=0.5, use_revin=True)
     model.fit(x_train, y_train)
     # eval results
