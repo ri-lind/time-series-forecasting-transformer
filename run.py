@@ -149,7 +149,7 @@ def main():
     compile_model(model, optimizer)
 
     # Callbacks configuration for model checkpoints
-    checkpoint_path = os.path.join(args.checkpoint_dir, f"{exp_id}_best.h5")
+    checkpoint_path = os.path.join(args.checkpoint_dir, f"{exp_id}_best.weights.h5")
     callbacks, capture_weights_callback = setup_callbacks(args, checkpoint_path, model)
 
     # Training process initiation
