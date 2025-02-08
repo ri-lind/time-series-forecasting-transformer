@@ -29,60 +29,19 @@ from .model_utils import cosine_annealing
 
 
 class CaptureWeightsCallback(tf.keras.callbacks.Callback):
-    """
-    Custom TensorFlow callback for capturing and logging model weights during training, with a focus on attention weights.
-
-    This callback is designed to monitor the evolution of model weights, particularly attention weights, across training epochs.
-    It facilitates the analysis of training dynamics and model behavior by storing weight snapshots at specified intervals.
-
-    Attributes:
-        model (tf.keras.Model): Instance of the TensorFlow model being trained. The model should have a method
-                                `get_last_attention_weights()` that this callback can invoke to obtain attention weights.
-        attention_weights_history (list): Accumulates the attention weights captured at the end of specified epochs. 
-                                          This history facilitates post-training analysis of weight adjustments.
-
-    Methods:
-        on_epoch_end(epoch, logs=None): Overrides the base class method to capture attention weights at the end of each epoch.
-                                        Weights are captured based on specified criteria, e.g., every 5 epochs.
-        get_attention_weights_history(): Provides access to the accumulated history of attention weights captured during training.
-    """
-    
-    def __init__(self, model):
-        """
-        Initializes the callback with a specific model to monitor its attention weights during training.
-
-        Parameters:
-            model (tf.keras.Model): The model whose attention weights are to be monitored and captured.
-        """
+    def __init__(self):
         super().__init__()
-        self.model = model
         self.penultimate_weights = None
         self.attention_weights_history = []
-
+    
     def on_epoch_end(self, epoch, logs=None):
-        """
-        Called at the end of an epoch during training to capture and store attention weights if the current
-        epoch satisfies the capture criteria (e.g., every 5 epochs).
-
-        Parameters:
-            epoch (int): The current epoch number.
-            logs (dict): Currently unused. Contains logs from the training epoch.
-        """
-        if epoch % 5 == 0:  # Perform analysis every 5 epochs
-            # Retrieve attention weights from the model
+        if epoch % 5 == 0:
             last_attention_weights = self.model.get_last_attention_weights()
             if last_attention_weights is not None:
                 self.attention_weights_history.append(last_attention_weights)
     
     def get_attention_weights_history(self):
-        """
-        Returns the history of attention weights captured during training.
-
-        Returns:
-            A list of attention weights captured at specified intervals during training.
-        """
         return self.attention_weights_history
-
 
 
 
@@ -134,7 +93,7 @@ def setup_callbacks(args, checkpoint_path, model):
             verbose=1,
         )
 
-        capture_weights_callback = CaptureWeightsCallback(model)
+        capture_weights_callback = CaptureWeightsCallback()
 
         callbacks = [checkpoint_callback, lr_schedule_callback, capture_weights_callback, early_stop_callback]
         
