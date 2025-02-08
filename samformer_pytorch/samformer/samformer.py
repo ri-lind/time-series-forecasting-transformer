@@ -52,7 +52,7 @@ class SAMFormer:
     """
     SAMFormer pytorch trainer implemented in the sklearn fashion
     """
-    def __init__(self, device='cuda:0', num_epochs=100, batch_size=256, base_optimizer=torch.optim.Adam,
+    def __init__(self, device='cuda:0', num_epochs=5, batch_size=256, base_optimizer=torch.optim.Adam,
                  learning_rate=1e-3, weight_decay=1e-5, rho=0.5, use_revin=True, random_state=None):
         self.network = None
         self.criterion = nn.MSELoss()
@@ -83,7 +83,7 @@ class SAMFormer:
                         lr=self.learning_rate, weight_decay=self.weight_decay)
 
         train_dataset = LabeledDataset(x, y)
-        data_loader_train = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+        data_loader_train = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
         progress_bar = tqdm(range(self.num_epochs))
         for epoch in progress_bar:
