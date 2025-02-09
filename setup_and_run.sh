@@ -1,12 +1,18 @@
 #!/bin/bash
 
-# Ensure a city argument is provided
+# Ensure at least one argument (city) is provided
 if [ -z "$1" ]; then
-    echo "Usage: sh setup_and_run.sh <city_name>"
+    echo "Usage: bash setup_and_run.sh <city_name> [--gpu]"
     exit 1
 fi
 
 CITY=$1
+USE_GPU=false
+
+# Check if the second argument is --gpu
+if [ "$2" == "--gpu" ]; then
+    USE_GPU=true
+fi
 
 # Clone the repository
 git clone https://github.com/ri-lind/time-series-forecasting-transformer.git
@@ -19,14 +25,25 @@ git checkout Time-MoE
 pip install virtualenv
 virtualenv colab_env
 
-# Activate the virtual environment
-source colab_env/bin/activate
+# Ensure the virtual environment exists before activating
+if [ -f "colab_env/bin/activate" ]; then
+    source colab_env/bin/activate  # Or use `. colab_env/bin/activate`
+else
+    echo "Error: Virtual environment activation script not found!"
+    exit 1
+fi
+
+pip list  # Print installed packages for debugging
 
 # Install dependencies
 pip install -r requirements.txt
 
-# Run preprocessing with the city argument
+# Run preprocessing with the city argument (creates the expected directory)
 python3 pre_processing/weather.py -city "$CITY"
 
-# Run the main script with the generated JSONL data
-python3 main.py -d "/content/jsonl/${CITY}.jsonl"
+# Run the main script, with or without GPU
+if [ "$USE_GPU" = true ]; then
+    python torch_dist_run.py main.py -d "/content/jsonl/${CITY}.jsonl"
+else
+    python3 main.py -d "/content/jsonl/${CITY}.jsonl"
+fi
