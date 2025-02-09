@@ -43,7 +43,7 @@ python3 pre_processing/weather.py -city "$CITY"
 
 # Run the main script, with or without GPU
 if [ "$USE_GPU" = true ]; then
-    python torch_dist_run.py main.py -d "/content/jsonl/${CITY}.jsonl"
+    python torch_dist_run.py main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
 else
-    python3 main.py -d "/content/jsonl/${CITY}.jsonl"
+    python3 main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
 fi
