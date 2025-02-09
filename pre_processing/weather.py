@@ -29,9 +29,12 @@ def main():
 
     city = args.city
     dir_path = "/content/jsonl"
+    csv_path = "/content/csv"
 
-    # Ensure the directory exists
+    # Ensure the directories exist
     os.makedirs(dir_path, exist_ok=True)
+    os.makedirs(csv_path, exist_ok=True)
+
     avg_temperatures = get_weather_data(city)
 
     # Convert NumPy array/Pandas Series to a list
@@ -53,6 +56,10 @@ def main():
     # Write test data to JSONL
     with open(f"{dir_path}/test_{city}.jsonl", "w", encoding="utf-8") as f_test:
         f_test.write(json.dumps(test_dict) + "\n")
+
+    # Save test data as a CSV file with one column
+    test_df = pd.DataFrame(test_data, columns=["tavg"])
+    test_df.to_csv(f"{csv_path}/test_{city}.csv", index=False)
 
 if __name__ == "__main__":
     main()
