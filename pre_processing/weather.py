@@ -36,12 +36,23 @@ def main():
 
     # Convert NumPy array/Pandas Series to a list
     sequence_list = avg_temperatures.tolist()
-    data_dict = {"sequence": sequence_list}
 
-    # Write to a .jsonl file
-    with open(f"{dir_path}/{city}.jsonl", "w", encoding="utf-8") as f_out:
-        json_line = json.dumps(data_dict)
-        f_out.write(json_line + "\n")
+    # Split the data (60% training, 40% testing)
+    split_idx = int(len(sequence_list) * 0.6)
+    training_data = sequence_list[:split_idx]
+    test_data = sequence_list[split_idx:]
+
+    # Create dictionaries for JSONL
+    train_dict = {"sequence": training_data}
+    test_dict = {"sequence": test_data}
+
+    # Write training data to JSONL
+    with open(f"{dir_path}/training_{city}.jsonl", "w", encoding="utf-8") as f_train:
+        f_train.write(json.dumps(train_dict) + "\n")
+
+    # Write test data to JSONL
+    with open(f"{dir_path}/test_{city}.jsonl", "w", encoding="utf-8") as f_test:
+        f_test.write(json.dumps(test_dict) + "\n")
 
 if __name__ == "__main__":
     main()
