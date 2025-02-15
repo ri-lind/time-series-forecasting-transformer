@@ -32,13 +32,26 @@ class BenchmarkEvalDataset(Dataset):
             border1s = [0, num_train - context_length, len(df) - num_test - context_length]
             border2s = [num_train, num_train + num_vali, len(df)]
 
-        start_dt = df.iloc[border1s[2]]['date']
-        eval_start_dt = df.iloc[border1s[2] + context_length]['date']
-        end_dt = df.iloc[border2s[2] - 1]['date']
-        log_in_local_rank_0(f'>>> Split test data from {start_dt} to {end_dt}, '
-                            f'and evaluation start date is: {eval_start_dt}')
+        if 'date' in df.columns:
+            start_dt = df.iloc[border1s[2]]['date']
+            eval_start_dt = df.iloc[border1s[2] + context_length]['date']
+            end_dt = df.iloc[border2s[2] - 1]['date']
+            log_in_local_rank_0(
+                f'>>> Split test data from {start_dt} to {end_dt}, '
+                f'and evaluation start date is: {eval_start_dt}'
+            )
+        else:
+            log_in_local_rank_0(
+                f'>>> No date column found. Test data split indices: {border1s[2]} to {border2s[2]-1}, '
+                f'evaluation starts at index {border1s[2] + context_length}'
+            )
 
-        cols = df.columns[1:]
+        # Use all columns except the first one if it's "date", else use all but assume first is not used
+        if 'date' in df.columns:
+            cols = df.columns[1:]
+        else:
+            cols = df.columns
+
         df_values = df[cols].values
 
         train_data = df_values[border1s[0]:border2s[0]]
@@ -52,7 +65,6 @@ class BenchmarkEvalDataset(Dataset):
         # assignment
         self.hf_dataset = scaled_test_data.transpose(1, 0)
         self.num_sequences = len(self.hf_dataset)
-        # 1 for the label
         self.window_length = self.context_length + self.prediction_length
 
         self.sub_seq_indexes = []
@@ -73,9 +85,7 @@ class BenchmarkEvalDataset(Dataset):
     def __getitem__(self, idx):
         seq_i, offset_i = self.sub_seq_indexes[idx]
         seq = self.hf_dataset[seq_i]
-
         window_seq = np.array(seq[offset_i - self.window_length: offset_i], dtype=np.float32)
-
         return {
             'inputs': np.array(window_seq[: self.context_length], dtype=np.float32),
             'labels': np.array(window_seq[-self.prediction_length:], dtype=np.float32),
