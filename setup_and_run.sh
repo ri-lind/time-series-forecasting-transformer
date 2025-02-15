@@ -27,15 +27,21 @@ while [[ "$#" -gt 0 ]]; do
             ;;
         *)
             echo "Unknown parameter passed: $1"
-            echo "Usage: bash setup_and_run.sh -city <city_name> [--finance] [--gpu]"
+            echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance) [--gpu]"
             exit 1
             ;;
     esac
 done
 
-# Ensure that at least one data flag is provided
+# Ensure that exactly one data flag is provided
 if [ -z "$CITY" ] && [ "$USE_FINANCE" = false ]; then
-    echo "Usage: bash setup_and_run.sh -city <city_name> [--finance] [--gpu]"
+    echo "Error: You must specify either -city <city_name> or --finance."
+    echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance) [--gpu]"
+    exit 1
+fi
+
+if [ -n "$CITY" ] && [ "$USE_FINANCE" = true ]; then
+    echo "Error: Please specify only one data type: either -city <city_name> or --finance, not both."
     exit 1
 fi
 
@@ -63,31 +69,20 @@ pip list  # Print installed packages for debugging
 # Install dependencies
 pip install -r requirements.txt
 
-# Preprocessing steps
-# Run finance preprocessing if the flag is set
+# Preprocessing and Training/Model execution based on the provided argument
 if [ "$USE_FINANCE" = true ]; then
     echo "Running finance data preprocessing..."
     python3 pre_processing/collect_process.py --finance
-fi
 
-# Run weather preprocessing if a city is specified
-if [ -n "$CITY" ]; then
-    echo "Running weather data preprocessing for city: $CITY..."
-    python3 pre_processing/collect_process.py -city "$CITY"
-fi
-
-# Training/Model execution
-# Run the main script for finance data if applicable
-if [ "$USE_FINANCE" = true ]; then
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
     else
         python3 main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
     fi
-fi
+elif [ -n "$CITY" ]; then
+    echo "Running weather data preprocessing for city: $CITY..."
+    python3 pre_processing/collect_process.py -city "$CITY"
 
-# Run the main script for weather data if a city was provided
-if [ -n "$CITY" ]; then
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
     else
