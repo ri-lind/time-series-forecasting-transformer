@@ -3,7 +3,9 @@
 # Default values
 CITY=""
 USE_FINANCE=false
+USE_ENERGY=false
 USE_GPU=false
+YEAR=2023
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -21,27 +23,40 @@ while [[ "$#" -gt 0 ]]; do
             USE_FINANCE=true
             shift
             ;;
+        --energy)
+            USE_ENERGY=true
+            shift
+            ;;
+        --year)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                YEAR="$2"
+                shift 2
+            else
+                echo "Error: '--year' requires a valid year argument."
+                exit 1
+            fi
+            ;;
         --gpu)
             USE_GPU=true
             shift
             ;;
         *)
             echo "Unknown parameter passed: $1"
-            echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance) [--gpu]"
+            echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance | --energy [--year <year>]) [--gpu]"
             exit 1
             ;;
     esac
 done
 
 # Ensure that exactly one data flag is provided
-if [ -z "$CITY" ] && [ "$USE_FINANCE" = false ]; then
-    echo "Error: You must specify either -city <city_name> or --finance."
-    echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance) [--gpu]"
-    exit 1
-fi
+flag_count=0
+if [ -n "$CITY" ]; then flag_count=$((flag_count+1)); fi
+if [ "$USE_FINANCE" = true ]; then flag_count=$((flag_count+1)); fi
+if [ "$USE_ENERGY" = true ]; then flag_count=$((flag_count+1)); fi
 
-if [ -n "$CITY" ] && [ "$USE_FINANCE" = true ]; then
-    echo "Error: Please specify only one data type: either -city <city_name> or --finance, not both."
+if [ "$flag_count" -ne 1 ]; then
+    echo "Error: You must specify exactly one data type: either -city <city_name>, --finance, or --energy."
+    echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance | --energy [--year <year>]) [--gpu]"
     exit 1
 fi
 
@@ -78,6 +93,15 @@ if [ "$USE_FINANCE" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
     else
         python3 main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
+    fi
+elif [ "$USE_ENERGY" = true ]; then
+    echo "Running energy data preprocessing for year: $YEAR..."
+    python3 pre_processing/collect_process.py --energy --year "$YEAR"
+
+    if [ "$USE_GPU" = true ]; then
+        python torch_dist_run.py main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
+    else
+        python3 main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
     fi
 elif [ -n "$CITY" ]; then
     echo "Running weather data preprocessing for city: $CITY..."
