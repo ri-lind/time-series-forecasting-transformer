@@ -48,4 +48,4 @@ else
     python3 main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
 fi
 
-python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${CITY}.csv --prediction_length 48
+#python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${CITY}.csv --prediction_length 48
