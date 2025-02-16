@@ -206,7 +206,7 @@ def main():
     group.add_argument("-f", "--finance", action="store_true", help="Fetch finance data")
     group.add_argument("-e", "--energy", action="store_true", help="Fetch energy data")
     group.add_argument("-c", "--city", help="Name of the city for weather data")
-    group.add_argument("-h", "--healthcare", help="Name of the country for healthcare data")
+    group.add_argument("--healthcare", help="Name of the country for healthcare data")  # Removed "-h" here.
     parser.add_argument("--year", type=int, default=2023, help="Year for energy data (default: 2023)")
     parser.add_argument("--device", default="cpu", help="Device to run the model on: 'cpu' or 'cuda'")
     args = parser.parse_args()
