@@ -114,7 +114,8 @@ elif [ "$USE_ENERGY" = true ]; then
     fi
 elif [ -n "$USE_HEALTHCARE" ]; then
     echo "Running healthcare data preprocessing for country: $USE_HEALTHCARE..."
-    python3 pre_processing/collect_process.py --healthcare --country "$USE_HEALTHCARE"
+    # Note: pass the healthcare country using -h, which is now reserved for healthcare data.
+    python3 pre_processing/collect_process.py -h "$USE_HEALTHCARE"
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_${USE_HEALTHCARE}.jsonl" --save_only_model
     else
