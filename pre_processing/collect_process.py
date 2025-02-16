@@ -84,14 +84,18 @@ def get_healthcare_data(country: str) -> ArrayLike:
     return new_cases[200:1200]
 
 def main():
+    # Disable default help (-h/--help) and add custom help with --help only.
     parser = argparse.ArgumentParser(
-        description="Fetch and save weather, finance, energy, or healthcare data based on provided arguments."
+        description="Fetch and save weather, finance, energy, or healthcare data based on provided arguments.",
+        add_help=False
     )
+    parser.add_argument('--help', action='help', help='Show this help message and exit.')
+    
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-f", "--finance", action="store_true", help="Fetch finance data")
     group.add_argument("-e", "--energy", action="store_true", help="Fetch energy data")
     group.add_argument("-c", "--city", help="Name of the city for weather data")
-    group.add_argument("-g", "--healthcare", help="Name of the country for healthcare data")
+    group.add_argument("-h", "--healthcare", help="Name of the country for healthcare data")
     parser.add_argument("--year", type=int, default=2023, help="Year for energy data (default: 2023)")
     args = parser.parse_args()
 
