@@ -129,4 +129,4 @@ elif [ -n "$CITY" ]; then
 fi
 
 # Optionally, evaluation command can be run (currently commented out)
-# python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_<flag>.csv --prediction_length 64
+python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_<flag>.csv --prediction_length 64
