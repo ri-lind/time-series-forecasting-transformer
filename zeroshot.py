@@ -1,22 +1,15 @@
-import os
-import json
-import argparse
-from datetime import datetime, timedelta
-from io import StringIO
-
-import torch
-import numpy as np
 import pandas as pd
+import numpy as np
+from numpy.typing import ArrayLike
+import kagglehub
+import json
+import os
+import argparse
 import requests
-import matplotlib.pyplot as plt
-from transformers import AutoModelForCausalLM
+from io import StringIO
+from datetime import datetime, timedelta
 
-# ---------------------------
-# Data Collection Functions
-# ---------------------------
-
-def get_weather_data(city: str) -> np.ndarray:
-    import kagglehub  # assuming kagglehub is installed and configured
+def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
     years = [2021, 2022, 2023]
     data_frames = []
@@ -28,14 +21,21 @@ def get_weather_data(city: str) -> np.ndarray:
     concatenated_data = pd.concat(data_frames, ignore_index=True)
     return concatenated_data.values
 
-def get_finance_data() -> np.ndarray:
-    CSV_FILE_ABSOLUTE_PATH = "/content/AMZN-stock-price.csv"  # update path if needed
+def get_finance_data():
+    """
+    Returns a numpy array containing the finance data.
+    """
+    CSV_FILE_ABSOLUTE_PATH = "/content/AMZN-stock-price.csv"
     df = pd.read_csv(CSV_FILE_ABSOLUTE_PATH)
     # Assuming the second column holds the desired data.
     df = df.iloc[:, 1]
     return df.values
 
-def get_consumption_data_year(year: int) -> np.ndarray:
+def get_consumption_data_year(year: int):
+    """
+    Downloads daily consumption data for a given year, concatenates all days into a single DataFrame,
+    and performs basic preprocessing (e.g., dropping NaN values).
+    """
     all_data = []
     current_date = datetime(year, 1, 1)
     end_date = datetime(year, 12, 31)
@@ -57,6 +57,10 @@ def get_consumption_data_year(year: int) -> np.ndarray:
     return values_float
 
 def get_new_cases_by_country(df: pd.DataFrame) -> dict:
+    """
+    Groups the DataFrame by 'Country', sorts by 'Date_reported', and returns a dictionary 
+    mapping country names to a NumPy array of new cases.
+    """
     result = {}
     for country, group in df.groupby('Country'):
         group_sorted = group.sort_values('Date_reported')
@@ -64,11 +68,14 @@ def get_new_cases_by_country(df: pd.DataFrame) -> dict:
         result[country] = new_cases_array
     return result
 
-def get_healthcare_data(country: str) -> np.ndarray:
-    CSV_FILE_ABSOLUTE_PATH = "/content/WHO-COVID-19-global-daily-data.csv"  # update path if needed
+def get_healthcare_data(country: str) -> ArrayLike:
+    """
+    Returns a NumPy array of new COVID-19 cases for the specified country.
+    Data is taken from the WHO global daily dataset, and a slice [200:1200] is returned.
+    """
+    CSV_FILE_ABSOLUTE_PATH = "/content/WHO-COVID-19-global-daily-data.csv"
     df = pd.read_csv(CSV_FILE_ABSOLUTE_PATH)
     df = df.sort_values(['Country', 'Date_reported'])
-    # Interpolate missing new_cases values
     df['New_cases'] = df.groupby('Country')['New_cases'].transform(lambda group: group.interpolate(method='linear'))
     cases_dict = get_new_cases_by_country(df)
     new_cases = cases_dict.get(country)
