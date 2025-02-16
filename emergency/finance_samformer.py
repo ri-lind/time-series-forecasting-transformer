@@ -6,8 +6,11 @@ This script loads financial time-series data from a CSV file,
 constructs sliding-window samples, trains a SAMFormer model,
 evaluates its predictions (computing RMSE and MASE),
 and produces plots comparing ground truth and predictions.
+The plots and metrics are saved to /content/results/finance.
 """
 
+import os
+import json
 import torch
 import numpy as np
 import pandas as pd
@@ -98,12 +101,13 @@ def train_test_split(seq_len, pred_len):
     return (x_train, y_train), (x_test, y_test)
 
 
-def plot_data(values, title="Data"):
+def plot_data(values, output_path, title="Data"):
     """
-    Plot a 1-D time series and display the plot.
+    Plot a 1-D time series and save the plot to the specified file.
 
     Args:
       values: A 1-D numpy array containing the data.
+      output_path: Absolute path (including filename) where the plot is saved.
       title: Title for the plot.
     """
     plt.figure(figsize=(12, 6))
@@ -113,17 +117,20 @@ def plot_data(values, title="Data"):
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Raw data plot saved to {output_path}")
 
 
-def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
+def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Truth"):
     """
-    Plot historical data, ground truth, and predicted future values.
+    Plot historical data, ground truth, and predicted future values, then save the plot.
 
     Args:
       x_context: Historical data array of shape (seq_len,).
       y_true: Ground truth future values array of shape (pred_len,).
       y_pred: Predicted future values array of shape (pred_len,).
+      output_path: Absolute path (including filename) to save the plot.
       title: Title for the plot.
     """
     seq_len = len(x_context)
@@ -144,7 +151,9 @@ def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Prediction plot saved to {output_path}")
 
 
 def mase(y_true, y_pred):
@@ -164,10 +173,15 @@ def mase(y_true, y_pred):
 
 
 def main():
-    # Plot the raw data
-    values = get_data()
-    print("Plotting the raw time series data...")
-    plot_data(values, title="AMZN Stock Price Data")
+    # Set output directory for plots and metrics
+    output_dir = "/content/results/finance"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Plot and save the raw data
+    raw_values = get_data()
+    raw_data_plot_path = os.path.join(output_dir, "raw_data.png")
+    print("Plotting raw financial time-series data...")
+    plot_data(raw_values, raw_data_plot_path, title="AMZN Stock Price Data")
     
     # Specify parameters
     seq_len = 256    # historical context length
@@ -195,17 +209,25 @@ def main():
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
     mase_val = mase(y_test, y_pred_test)
     
-    print('RMSE:', rmse_val)
-    print('MASE:', mase_val)
+    print("RMSE:", rmse_val)
+    print("MASE:", mase_val)
     
-    # Plot predictions for a chosen sample (e.g., sample index 310)
+    # Save metrics to a JSON file
+    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics_filepath = os.path.join(output_dir, "metrics.json")
+    with open(metrics_filepath, "w") as f:
+        json.dump(metrics, f, indent=4)
+    print(f"Metrics saved to {metrics_filepath}")
+    
+    # Plot sample prediction for a chosen sample (here sample index 310)
     sample_idx = 310
     x_context_sample = x_test[sample_idx].squeeze()  # shape: (seq_len,)
-    # y_test is flattened; reshape to (1, pred_len) and take first row
-    y_true_sample = y_test[sample_idx].reshape(1, -1)[0]
-    y_pred_sample = y_pred_test[sample_idx].reshape(1, -1)[0]
-    plot(x_context_sample, y_true_sample, y_pred_sample, title="Ground Truth vs Predictions")
-
+    y_true_sample = y_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
+    y_pred_sample = y_pred_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
+    pred_plot_path = os.path.join(output_dir, "sample_prediction.png")
+    plot(x_context_sample, y_true_sample, y_pred_sample, pred_plot_path,
+         title="Ground Truth vs Predictions")
+    
 
 if __name__ == "__main__":
     main()
