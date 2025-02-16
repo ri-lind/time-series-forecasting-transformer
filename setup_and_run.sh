@@ -7,6 +7,7 @@ USE_ENERGY=false
 USE_HEALTHCARE=""
 USE_GPU=false
 YEAR=2023
+FILE_SUFFIX=""
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -97,39 +98,42 @@ pip install -r requirements.txt
 
 # Preprocessing and training/model execution based on provided argument
 if [ "$USE_FINANCE" = true ]; then
+    FILE_SUFFIX="finance"
     echo "Running finance data preprocessing..."
     python3 pre_processing/collect_process.py --finance
     if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
+        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     else
-        python3 main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
+        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     fi
 elif [ "$USE_ENERGY" = true ]; then
+    FILE_SUFFIX="energy"
     echo "Running energy data preprocessing for year: $YEAR..."
     python3 pre_processing/collect_process.py --energy --year "$YEAR"
     if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
+        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     else
-        python3 main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
+        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     fi
 elif [ -n "$USE_HEALTHCARE" ]; then
+    FILE_SUFFIX="$USE_HEALTHCARE"
     echo "Running healthcare data preprocessing for country: $USE_HEALTHCARE..."
-    # Note: pass the healthcare country using -h, which is now reserved for healthcare data.
     python3 pre_processing/collect_process.py -h "$USE_HEALTHCARE"
     if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${USE_HEALTHCARE}.jsonl" --save_only_model
+        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     else
-        python3 main.py -d "/content/jsonl/training_${USE_HEALTHCARE}.jsonl" --save_only_model
+        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     fi
 elif [ -n "$CITY" ]; then
+    FILE_SUFFIX="$CITY"
     echo "Running weather data preprocessing for city: $CITY..."
     python3 pre_processing/collect_process.py --city "$CITY"
     if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
+        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     else
-        python3 main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
+        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model
     fi
 fi
 
-# Optionally, evaluation command can be run (currently commented out)
-python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_<flag>.csv --prediction_length 128
+# Optionally, evaluation command using the proper FILE_SUFFIX
+python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128
