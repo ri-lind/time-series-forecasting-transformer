@@ -8,6 +8,7 @@ USE_HEALTHCARE=""
 USE_GPU=false
 YEAR=2023
 FILE_SUFFIX=""
+SETUP_ONLY=false
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
@@ -51,15 +52,45 @@ while [[ "$#" -gt 0 ]]; do
             USE_GPU=true
             shift
             ;;
+        --setup-only)
+            SETUP_ONLY=true
+            shift
+            ;;
         *)
             echo "Unknown parameter passed: $1"
-            echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
+            echo "Usage: bash setup_and_run.sh [--setup-only] (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
             exit 1
             ;;
     esac
 done
 
-# Ensure exactly one data flag is provided
+# If setup-only flag is passed, only perform virtual environment creation and dependency installation.
+if [ "$SETUP_ONLY" = true ]; then
+    echo "Running setup-only: Creating virtual environment and installing dependencies..."
+    if [ ! -d "time-series-forecasting-transformer" ]; then
+        git clone https://github.com/ri-lind/time-series-forecasting-transformer.git
+    fi
+    cd time-series-forecasting-transformer || exit
+    git checkout Time-MoE
+
+    pip install virtualenv
+    virtualenv colab_env
+
+    if [ -f "colab_env/bin/activate" ]; then
+        source colab_env/bin/activate
+    else
+        echo "Error: Virtual environment activation script not found!"
+        exit 1
+    fi
+
+    pip list  # Print installed packages for debugging
+    pip install -r requirements.txt
+
+    echo "Setup completed successfully."
+    exit 0
+fi
+
+# Ensure exactly one data flag is provided (only if not running setup-only)
 flag_count=0
 if [ -n "$CITY" ]; then flag_count=$((flag_count+1)); fi
 if [ "$USE_FINANCE" = true ]; then flag_count=$((flag_count+1)); fi
@@ -136,4 +167,4 @@ elif [ -n "$CITY" ]; then
 fi
 
 # Optionally, evaluation command using the proper FILE_SUFFIX
-#python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_Germany.csv --prediction_length 64 --context_length 128
+# python run_eval.py -m logs/time_moe/ -d csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
