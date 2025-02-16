@@ -95,6 +95,7 @@ def main():
     group.add_argument("-f", "--finance", action="store_true", help="Fetch finance data")
     group.add_argument("-e", "--energy", action="store_true", help="Fetch energy data")
     group.add_argument("-c", "--city", help="Name of the city for weather data")
+    # Use -h for healthcare data since default help is disabled
     group.add_argument("-h", "--healthcare", help="Name of the country for healthcare data")
     parser.add_argument("--year", type=int, default=2023, help="Year for energy data (default: 2023)")
     args = parser.parse_args()

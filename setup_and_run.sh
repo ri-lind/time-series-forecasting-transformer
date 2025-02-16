@@ -28,12 +28,12 @@ while [[ "$#" -gt 0 ]]; do
             USE_ENERGY=true
             shift
             ;;
-        -g|--healthcare)
+        -h|--healthcare)
             if [[ -n "$2" && "$2" != -* ]]; then
                 USE_HEALTHCARE="$2"
                 shift 2
             else
-                echo "Error: '-g|--healthcare' requires a non-empty argument."
+                echo "Error: '-h|--healthcare' requires a non-empty argument."
                 exit 1
             fi
             ;;
@@ -52,7 +52,7 @@ while [[ "$#" -gt 0 ]]; do
             ;;
         *)
             echo "Unknown parameter passed: $1"
-            echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -g <Countryname>) [--gpu]"
+            echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
             exit 1
             ;;
     esac
@@ -66,13 +66,15 @@ if [ "$USE_ENERGY" = true ]; then flag_count=$((flag_count+1)); fi
 if [ -n "$USE_HEALTHCARE" ]; then flag_count=$((flag_count+1)); fi
 
 if [ "$flag_count" -ne 1 ]; then
-    echo "Error: Specify exactly one data type: -c <city_name>, -f, -e [--year <year>], or -g <Countryname>."
-    echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -g <Countryname>) [--gpu]"
+    echo "Error: Specify exactly one data type: -c <city_name>, -f, -e [--year <year>], or -h <Countryname>."
+    echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
     exit 1
 fi
 
-# Clone the repository
-git clone https://github.com/ri-lind/time-series-forecasting-transformer.git
+# Clone the repository if not already present
+if [ ! -d "time-series-forecasting-transformer" ]; then
+    git clone https://github.com/ri-lind/time-series-forecasting-transformer.git
+fi
 cd time-series-forecasting-transformer || exit
 
 # Checkout the Time-MoE branch
