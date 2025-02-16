@@ -1,3 +1,13 @@
+#!/usr/bin/env python
+"""
+weather_samformer.py
+
+This script loads weather data from a CSV file, constructs sliding-window samples,
+trains a SAMFormer model on the data, evaluates its predictions (computing RMSE and MASE),
+and saves a sample prediction plot and evaluation metrics.
+All outputs are saved under /content/results/weather.
+"""
+
 import os
 import json
 import torch
@@ -7,17 +17,20 @@ import kagglehub
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
-from transformers import AutoModelForCausalLM  # not directly used here but kept for reference
+from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 from numpy.typing import ArrayLike
 from samformer import SAMFormer
-from sklearn.preprocessing import StandardScaler
 
-# Ensure the results folder exists
-RESULTS_DIR = "results"
+# Set the results directory to /content/results/weather and ensure it exists
+RESULTS_DIR = "/content/results/weather"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
 def get_weather_data(city: str) -> ArrayLike:
+    """
+    Downloads weather data for a given city from the Kaggle dataset.
+    Returns a 1-D numpy array of daily average temperatures.
+    """
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
     years = [2021, 2022, 2023]
     data_frames = []
@@ -55,7 +68,7 @@ def construct_sliding_window_data(data, seq_len, pred_len, time_increment=1):
 
 def read_weather_dataset(seq_len, pred_len, city):
     """
-    Load weather data for a given city, split it into train/test,
+    Load weather data for a given city, split it into train/test sets,
     standardize using the training set, and apply a sliding window.
     """
     ts = get_weather_data(city)
@@ -77,7 +90,7 @@ def read_weather_dataset(seq_len, pred_len, city):
 
 def plot_weather_data(weather_values: ArrayLike, title: str = "Weather Data"):
     """
-    Plot weather data from a 1-D array and save the figure to the results folder.
+    Plot weather data from a 1-D array and save the figure to the results directory.
     """
     plt.figure(figsize=(12, 6))
     plt.plot(weather_values, label="Daily Average Temperature", color="blue", linewidth=2)
@@ -93,7 +106,7 @@ def plot_weather_data(weather_values: ArrayLike, title: str = "Weather Data"):
 
 def plot_weather_predictions(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
     """
-    Plot historical data, ground truth, and predicted values and save to results folder.
+    Plot historical data, ground truth, and predicted values and save to the results directory.
     """
     seq_len = len(x_context)
     pred_len = len(y_true)
@@ -114,9 +127,11 @@ def plot_weather_predictions(x_context, y_true, y_pred, title="Predictions vs Gr
     print(f"Prediction plot saved to {save_path}")
 
 def mase(y_true, y_pred):
-    n = len(y_true)
-    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
+    """
+    Compute the Mean Absolute Scaled Error (MASE).
+    """
     mae_model = np.mean(np.abs(y_pred - y_true))
+    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
     return mae_model / naive_mae if naive_mae != 0 else float("inf")
 
 def save_metrics_to_file(metrics: dict, filepath: str):
@@ -124,11 +139,8 @@ def save_metrics_to_file(metrics: dict, filepath: str):
         json.dump(metrics, f, indent=4)
     print(f"Metrics saved to {filepath}")
 
-# ---------------------------
-# Main Execution
-# ---------------------------
-if __name__ == "__main__":
-    # Example: Get weather data and save the plot
+def main():
+    # Example: Get weather data and save its plot
     weather_values = get_weather_data("lezhe")
     plot_weather_data(weather_values, title="Weather Data for Lezhe")
 
@@ -149,7 +161,6 @@ if __name__ == "__main__":
                       weight_decay=1e-5,
                       rho=0.5,
                       use_revin=True)
-
     model.fit(x_train, y_train)
 
     # Evaluate the model on the test set
@@ -159,15 +170,18 @@ if __name__ == "__main__":
     print('RMSE:', rmse_val)
     print('MASE:', mase_val)
 
-    # Save metrics to a file
+    # Save metrics to a JSON file in the results directory
     metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
     metrics_filepath = os.path.join(RESULTS_DIR, "metrics.json")
     save_metrics_to_file(metrics, metrics_filepath)
 
-    # Plot predictions for a sample and save the plot
+    # Plot sample prediction for a chosen sample and save the plot
     sample_idx = 310  # choose a sample index
-    x_context_sample = x_test[sample_idx][0]  # univariate, so take the first channel
+    x_context_sample = x_test[sample_idx][0]  # univariate: take the first channel
     y_true_sample = y_test[sample_idx].reshape(1, -1)[0]
     y_pred_sample = y_pred_test[sample_idx].reshape(1, -1)[0]
     plot_weather_predictions(x_context_sample, y_true_sample, y_pred_sample,
                              title="Weather Forecast for City 'Lezhe'")
+
+if __name__ == "__main__":
+    main()
