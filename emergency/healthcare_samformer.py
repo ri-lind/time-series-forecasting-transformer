@@ -5,8 +5,11 @@ covid_samformer.py
 This script loads COVID-19 new cases data from a CSV file, constructs sliding-window samples,
 trains a SAMFormer model on the data, evaluates the model (computing RMSE and MASE), and produces
 a plot comparing the ground truth and predictions.
+All results (plots and metrics) are saved under /content/results/healthcare.
 """
 
+import os
+import json
 import torch
 import numpy as np
 import pandas as pd
@@ -107,12 +110,13 @@ def train_test_split(seq_len, pred_len):
     return (x_train, y_train), (x_test, y_test)
 
 
-def plot_data(values, title="Data"):
+def plot_data(values, output_path, title="Data"):
     """
-    Plot a 1-D time series.
+    Plot a 1-D time series and save the plot to the specified file.
 
     Args:
       values (np.ndarray): 1-D array of data values.
+      output_path (str): Path (including filename) to save the plot.
       title (str): Plot title.
     """
     plt.figure(figsize=(12, 6))
@@ -122,17 +126,20 @@ def plot_data(values, title="Data"):
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Raw data plot saved to {output_path}")
 
 
-def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
+def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Truth"):
     """
-    Plot historical input, ground truth future values, and predictions.
+    Plot historical input, ground truth future values, and predictions, then save the plot.
 
     Args:
       x_context (np.ndarray): Array of shape (seq_len,) for historical data.
       y_true (np.ndarray): Array of shape (pred_len,) for ground truth.
       y_pred (np.ndarray): Array of shape (pred_len,) for predictions.
+      output_path (str): File path to save the plot.
       title (str): Plot title.
     """
     seq_len = len(x_context)
@@ -149,7 +156,9 @@ def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Prediction plot saved to {output_path}")
 
 
 def mase(y_true, y_pred):
@@ -169,17 +178,22 @@ def mase(y_true, y_pred):
 
 
 def main():
-    # Get and plot the raw data
+    # Set output directory for plots and metrics
+    output_dir = "/content/results/healthcare"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Plot and save the raw data
     values = get_data()
+    raw_data_plot_path = os.path.join(output_dir, "raw_data.png")
     print("Plotting raw COVID-19 new cases data for Germany...")
-    plot_data(values, title="Germany COVID-19 New Cases (200:1200)")
+    plot_data(values, raw_data_plot_path, title="Germany COVID-19 New Cases (200:1200)")
 
     # Set parameters
     seq_len = 256   # Historical context length
     pred_len = 128  # Forecast horizon length
     batch_size = 64
 
-    # Generate train/test sliding-window samples
+    # Generate sliding-window samples for train/test split
     (x_train, y_train), (x_test, y_test) = train_test_split(seq_len, pred_len)
 
     # Instantiate and train SAMFormer model
@@ -191,23 +205,31 @@ def main():
                       weight_decay=1e-5,
                       rho=0.5,
                       use_revin=True)
-
     model.fit(x_train, y_train)
 
     # Evaluate model on test set
-    print("Evaluating model on test set...")
+    print("Evaluating model on test data...")
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
     mase_val = mase(y_test, y_pred_test)
     print("RMSE:", rmse_val)
     print("MASE:", mase_val)
 
-    # Plot sample prediction (first sample in test set)
+    # Save metrics to a JSON file
+    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics_filepath = os.path.join(output_dir, "metrics.json")
+    with open(metrics_filepath, "w") as f:
+        json.dump(metrics, f, indent=4)
+    print(f"Metrics saved to {metrics_filepath}")
+
+    # Plot sample prediction (first sample in test set) and save the plot
     sample_idx = 0
-    x_context_sample = x_test[sample_idx].squeeze()   # shape: (seq_len,)
+    x_context_sample = x_test[sample_idx].squeeze()  # shape: (seq_len,)
     y_true_sample = y_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
     y_pred_sample = y_pred_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
-    plot(x_context_sample, y_true_sample, y_pred_sample, title="Ground Truth vs Predictions")
+    pred_plot_path = os.path.join(output_dir, "sample_prediction.png")
+    plot(x_context_sample, y_true_sample, y_pred_sample, pred_plot_path,
+         title="Ground Truth vs Predictions")
 
 
 if __name__ == "__main__":

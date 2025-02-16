@@ -4,9 +4,12 @@ energy_samformer.py
 
 This script downloads hourly energy consumption data for a given year,
 constructs sliding-window samples, trains a SAMFormer model, evaluates the model
-(using RMSE and MASE metrics), and plots sample predictions.
+(using RMSE and MASE metrics), and saves sample prediction plots.
+All results (plots and metrics) are saved under /content/results/energy.
 """
 
+import os
+import json
 import torch
 import numpy as np
 import pandas as pd
@@ -41,7 +44,7 @@ def get_consumption_data_year(year):
         print(f"Fetching data for {date_str} from:\n{url}")
         try:
             response = requests.get(url)
-            response.raise_for_status()  # Raise an error for bad status codes
+            response.raise_for_status()
             daily_df = pd.read_csv(StringIO(response.text), sep=';')
             all_data.append(daily_df)
         except Exception as e:
@@ -99,7 +102,7 @@ def read_library_energy_dataset(seq_len, pred_len, year):
     train_series = ts[:train_end]
     test_series = ts[train_end - seq_len:]
 
-    # (Optional) Uncomment below if you want to normalize the data.
+    # (Optional) Uncomment below to normalize data.
     # scaler = StandardScaler()
     # scaler.fit(train_series)
     # train_series = scaler.transform(train_series)
@@ -115,33 +118,37 @@ def read_library_energy_dataset(seq_len, pred_len, year):
     return (x_train, y_train), (x_test, y_test)
 
 
-def plot_weather_data(weather_values, title="Weather Data"):
+def plot_data(values, output_path, title="Data"):
     """
-    Plot energy consumption data from a 1-D array.
+    Plot a 1-D time series and save the plot to the specified file.
 
     Args:
-      weather_values (np.ndarray): A 1-D array of energy consumption values.
-      title (str): Title for the plot.
+      values (np.ndarray): 1-D array of data values.
+      output_path (str): Path (including filename) where the plot is saved.
+      title (str): Plot title.
     """
     plt.figure(figsize=(12, 6))
-    plt.plot(weather_values, label="Hourly Energy Consumption Rate Stadtbücherei", color="blue", linewidth=2)
+    plt.plot(values, label="Hourly Energy Consumption", color="blue", linewidth=2)
     plt.xlabel("Time (Hours)")
     plt.ylabel("kWh")
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Raw data plot saved to {output_path}")
 
 
-def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
+def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Truth"):
     """
-    Plot historical data, ground truth, and predicted values.
+    Plot historical data, ground truth, and predicted values, then save the plot.
 
     Args:
       x_context (np.ndarray): Historical data array of shape (seq_len,).
       y_true (np.ndarray): Ground truth future values array of shape (pred_len,).
       y_pred (np.ndarray): Predicted future values array of shape (pred_len,).
-      title (str): Title for the plot.
+      output_path (str): File path where the plot will be saved.
+      title (str): Plot title.
     """
     seq_len = len(x_context)
     pred_len = len(y_true)
@@ -157,7 +164,9 @@ def plot(x_context, y_true, y_pred, title="Predictions vs Ground Truth"):
     plt.title(title)
     plt.legend()
     plt.grid(True)
-    plt.show()
+    plt.savefig(output_path)
+    plt.close()
+    print(f"Prediction plot saved to {output_path}")
 
 
 def mase(y_true, y_pred):
@@ -177,20 +186,26 @@ def mase(y_true, y_pred):
 
 
 def main():
-    # Specify parameters
+    # Set output directory for plots and metrics
+    output_dir = "/content/results/energy"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # (Optional) Plot raw energy consumption data (if desired)
+    # raw_values = get_consumption_data_year(year)
+    # raw_data_plot_path = os.path.join(output_dir, "raw_data.png")
+    # plot_data(raw_values, raw_data_plot_path, title="Stadtbücherei Energy Consumption")
+
+    # Set parameters
     seq_len = 256    # Historical context length
     pred_len = 128   # Forecast horizon length
     year = 2024      # Year to evaluate
     batch_size = 64
 
-    # (Optional) Plot raw consumption data
-    # raw_values = get_consumption_data_year(year)
-    # plot_weather_data(raw_values, title="Stadtbücherei Energy Consumption")
-
-    # Read dataset and construct sliding window samples
+    # Generate sliding-window samples
     (x_train, y_train), (x_test, y_test) = read_library_energy_dataset(seq_len, pred_len, year)
 
     # Instantiate and train SAMFormer model
+    print("Training SAMFormer model on energy consumption data...")
     model = SAMFormer(num_epochs=100,
                       batch_size=batch_size,
                       base_optimizer=torch.optim.Adam,
@@ -198,24 +213,31 @@ def main():
                       weight_decay=1e-5,
                       rho=0.5,
                       use_revin=True)
-
-    print("Training SAMFormer model...")
     model.fit(x_train, y_train)
 
-    # Evaluate the model on the test set
-    print("Evaluating model...")
+    # Evaluate model on test set
+    print("Evaluating model on test data...")
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
     mase_val = mase(y_test, y_pred_test)
     print("RMSE:", rmse_val)
     print("MASE:", mase_val)
 
+    # Save metrics to a JSON file
+    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics_filepath = os.path.join(output_dir, "metrics.json")
+    with open(metrics_filepath, "w") as f:
+        json.dump(metrics, f, indent=4)
+    print(f"Metrics saved to {metrics_filepath}")
+
     # Plot a sample prediction from the test set
-    sample_idx = 310  # Change index if needed
+    sample_idx = 310  # Change index if desired
     x_context_sample = x_test[sample_idx].squeeze()  # shape: (seq_len,)
     y_true_sample = y_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
     y_pred_sample = y_pred_test[sample_idx].reshape(1, -1)[0]  # shape: (pred_len,)
-    plot(x_context_sample, y_true_sample, y_pred_sample, title="Energy Forecast Sample")
+    pred_plot_path = os.path.join(output_dir, "sample_prediction.png")
+    plot(x_context_sample, y_true_sample, y_pred_sample, pred_plot_path,
+         title="Energy Forecast Sample")
 
 
 if __name__ == "__main__":
