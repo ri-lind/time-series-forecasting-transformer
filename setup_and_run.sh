@@ -4,28 +4,38 @@
 CITY=""
 USE_FINANCE=false
 USE_ENERGY=false
+USE_HEALTHCARE=""
 USE_GPU=false
 YEAR=2023
 
 # Parse command-line arguments
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        -city)
+        -c|--city)
             if [[ -n "$2" && "$2" != -* ]]; then
                 CITY="$2"
                 shift 2
             else
-                echo "Error: '-city' requires a non-empty argument."
+                echo "Error: '-c|--city' requires a non-empty argument."
                 exit 1
             fi
             ;;
-        --finance)
+        -f|--finance)
             USE_FINANCE=true
             shift
             ;;
-        --energy)
+        -e|--energy)
             USE_ENERGY=true
             shift
+            ;;
+        -h|--healthcare)
+            if [[ -n "$2" && "$2" != -* ]]; then
+                USE_HEALTHCARE="$2"
+                shift 2
+            else
+                echo "Error: '-h|--healthcare' requires a non-empty argument."
+                exit 1
+            fi
             ;;
         --year)
             if [[ -n "$2" && "$2" != -* ]]; then
@@ -42,21 +52,22 @@ while [[ "$#" -gt 0 ]]; do
             ;;
         *)
             echo "Unknown parameter passed: $1"
-            echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance | --energy [--year <year>]) [--gpu]"
+            echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
             exit 1
             ;;
     esac
 done
 
-# Ensure that exactly one data flag is provided
+# Ensure exactly one data flag is provided
 flag_count=0
 if [ -n "$CITY" ]; then flag_count=$((flag_count+1)); fi
 if [ "$USE_FINANCE" = true ]; then flag_count=$((flag_count+1)); fi
 if [ "$USE_ENERGY" = true ]; then flag_count=$((flag_count+1)); fi
+if [ -n "$USE_HEALTHCARE" ]; then flag_count=$((flag_count+1)); fi
 
 if [ "$flag_count" -ne 1 ]; then
-    echo "Error: You must specify exactly one data type: either -city <city_name>, --finance, or --energy."
-    echo "Usage: bash setup_and_run.sh (-city <city_name> | --finance | --energy [--year <year>]) [--gpu]"
+    echo "Error: Specify exactly one data type: -c <city_name>, -f, -e [--year <year>], or -h <Countryname>."
+    echo "Usage: bash setup_and_run.sh (-c <city_name> | -f | -e [--year <year>] | -h <Countryname>) [--gpu]"
     exit 1
 fi
 
@@ -80,15 +91,12 @@ else
 fi
 
 pip list  # Print installed packages for debugging
-
-# Install dependencies
 pip install -r requirements.txt
 
-# Preprocessing and Training/Model execution based on the provided argument
+# Preprocessing and training/model execution based on provided argument
 if [ "$USE_FINANCE" = true ]; then
     echo "Running finance data preprocessing..."
     python3 pre_processing/collect_process.py --finance
-
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_finance.jsonl" --save_only_model
     else
@@ -97,16 +105,22 @@ if [ "$USE_FINANCE" = true ]; then
 elif [ "$USE_ENERGY" = true ]; then
     echo "Running energy data preprocessing for year: $YEAR..."
     python3 pre_processing/collect_process.py --energy --year "$YEAR"
-
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
     else
         python3 main.py -d "/content/jsonl/training_energy.jsonl" --save_only_model
     fi
+elif [ -n "$USE_HEALTHCARE" ]; then
+    echo "Running healthcare data preprocessing for country: $USE_HEALTHCARE..."
+    python3 pre_processing/collect_process.py --healthcare --country "$USE_HEALTHCARE"
+    if [ "$USE_GPU" = true ]; then
+        python torch_dist_run.py main.py -d "/content/jsonl/training_${USE_HEALTHCARE}.jsonl" --save_only_model
+    else
+        python3 main.py -d "/content/jsonl/training_${USE_HEALTHCARE}.jsonl" --save_only_model
+    fi
 elif [ -n "$CITY" ]; then
     echo "Running weather data preprocessing for city: $CITY..."
-    python3 pre_processing/collect_process.py -city "$CITY"
-
+    python3 pre_processing/collect_process.py --city "$CITY"
     if [ "$USE_GPU" = true ]; then
         python torch_dist_run.py main.py -d "/content/jsonl/training_${CITY}.jsonl" --save_only_model
     else
@@ -115,4 +129,4 @@ elif [ -n "$CITY" ]; then
 fi
 
 # Optionally, evaluation command can be run (currently commented out)
-#python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${CITY}.csv --prediction_length 48
+# python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_<flag>.csv --prediction_length 64
