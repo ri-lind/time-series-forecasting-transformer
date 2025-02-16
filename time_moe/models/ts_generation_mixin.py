@@ -201,10 +201,15 @@ def _update_model_kwargs_for_generation(
         self,
         outputs: ModelOutput,
         model_kwargs: Dict[str, Any],
-        horizon_length: int = 1,
+        horizon_length: int = None,
         is_encoder_decoder: bool = False,
         standardize_cache_format: bool = False,
+        **kwargs  # catch any extra keyword arguments
 ) -> Dict[str, Any]:
+    # If horizon_length is not provided, default to the model's prediction_length.
+    if horizon_length is None:
+        horizon_length = self.prediction_length
+
     # update past_key_values without the unsupported keyword argument
     model_kwargs["past_key_values"] = self._extract_past_from_model_output(outputs)
     
@@ -231,12 +236,7 @@ def _update_model_kwargs_for_generation(
         if "decoder_attention_mask" in model_kwargs:
             decoder_attention_mask = model_kwargs["decoder_attention_mask"]
             model_kwargs["decoder_attention_mask"] = torch.cat(
-                [
-                    decoder_attention_mask,
-                    decoder_attention_mask.new_ones(
-                        (decoder_attention_mask.shape[0], horizon_length)
-                    ),
-                ],
+                [decoder_attention_mask, decoder_attention_mask.new_ones((decoder_attention_mask.shape[0], horizon_length))],
                 dim=-1,
             )
 
@@ -244,4 +244,5 @@ def _update_model_kwargs_for_generation(
         model_kwargs["cache_position"] = model_kwargs["cache_position"][-1:] + horizon_length
 
     return model_kwargs
+
 

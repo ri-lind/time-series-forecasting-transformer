@@ -136,4 +136,4 @@ elif [ -n "$CITY" ]; then
 fi
 
 # Optionally, evaluation command using the proper FILE_SUFFIX
-python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128
+python /content/time-series-forecasting-transformer/run_eval.py -m /content/time-series-forecasting-transformer/logs/time_moe/ -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64
