@@ -34,7 +34,3 @@ pip install -r requirements.txt
 # Install additional packages (which may not be in requirements.txt) needed by the Python file
 echo "Installing additional packages..."
 pip install transformers matplotlib numpy kagglehub torch
-
-# Run the Python file (which will save plots and results into a folder called 'results')
-echo "Running weather_samformer.py..."
-#python weather_samformer.py
