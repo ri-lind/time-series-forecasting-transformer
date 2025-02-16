@@ -8,6 +8,8 @@ import argparse
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
+from transformers import AutoModelForCausalLM
+
 
 def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
