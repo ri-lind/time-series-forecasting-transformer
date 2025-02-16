@@ -4,6 +4,8 @@ pandas
 torch
 scikit-learn
 kagglehub
+matplotlib
+
 
 transformers==4.40.1
 datasets==2.18.0

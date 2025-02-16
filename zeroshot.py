@@ -172,7 +172,8 @@ class ZeroShotForecast:
         mse = np.mean((predictions - ground_truth) ** 2)
         mae = np.mean(np.abs(predictions - ground_truth))
         rmse = np.sqrt(mse)
-        return {"MSE": mse, "MAE": mae, "RMSE": rmse}
+        return {"MSE": float(mse), "MAE": float(mae), "RMSE": float(rmse)}
+
 
     def plot_results(self, predictions: np.ndarray, ground_truth: np.ndarray) -> str:
         plt.figure(figsize=(10, 5))
