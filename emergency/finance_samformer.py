@@ -4,7 +4,7 @@ amzn_samformer.py
 
 This script loads financial time-series data from a CSV file,
 constructs sliding-window samples, trains a SAMFormer model,
-evaluates its predictions (computing RMSE and MASE),
+evaluates its predictions (computing RMSE and MAE),
 and produces plots comparing ground truth and predictions.
 The plots and metrics are saved to /content/results/finance.
 """
@@ -17,7 +17,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 from io import StringIO
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler  # Changed from StandardScaler
 import matplotlib.pyplot as plt
 
 # Import the SAMFormer model from the samformer package.
@@ -65,7 +65,7 @@ def construct_sliding_window_data(data, seq_len, pred_len, time_increment=1):
 def train_test_split(seq_len, pred_len):
     """
     Load the data from CSV, split it into train and test sets,
-    standardize using the training set, and apply a sliding window.
+    normalize using the training set with a MinMaxScaler, and apply a sliding window.
 
     Args:
       seq_len: Length of historical context.
@@ -84,8 +84,8 @@ def train_test_split(seq_len, pred_len):
     # To allow full sliding-window samples in test, include last seq_len points of train.
     test_series = ts[train_end - seq_len:]
     
-    # Normalize the data using StandardScaler
-    scaler = StandardScaler()
+    # Normalize the data using MinMaxScaler
+    scaler = MinMaxScaler()
     scaler.fit(train_series)
     train_series = scaler.transform(train_series)
     test_series = scaler.transform(test_series)
@@ -156,22 +156,6 @@ def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Tr
     print(f"Prediction plot saved to {output_path}")
 
 
-def mase(y_true, y_pred):
-    """
-    Compute the Mean Absolute Scaled Error (MASE).
-
-    Args:
-      y_true: Ground truth values.
-      y_pred: Predicted values.
-
-    Returns:
-      MASE value.
-    """
-    mae_model = np.mean(np.abs(y_pred - y_true))
-    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
-    return mae_model / naive_mae if naive_mae != 0 else float("inf")
-
-
 def main():
     # Set output directory for plots and metrics
     output_dir = "/content/results/finance"
@@ -207,13 +191,13 @@ def main():
     print("Evaluating model on test data...")
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
-    mase_val = mase(y_test, y_pred_test)
+    mae_val = np.mean(np.abs(y_test - y_pred_test))
     
     print("RMSE:", rmse_val)
-    print("MASE:", mase_val)
+    print("MAE:", mae_val)
     
     # Save metrics to a JSON file
-    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics = {"RMSE": float(rmse_val), "MAE": float(mae_val)}
     metrics_filepath = os.path.join(output_dir, "metrics.json")
     with open(metrics_filepath, "w") as f:
         json.dump(metrics, f, indent=4)

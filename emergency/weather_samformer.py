@@ -3,7 +3,7 @@
 weather_samformer.py
 
 This script loads weather data from a CSV file, constructs sliding-window samples,
-trains a SAMFormer model on the data, evaluates its predictions (computing RMSE and MASE),
+trains a SAMFormer model on the data, evaluates its predictions (computing RMSE and MAE),
 and saves a sample prediction plot and evaluation metrics.
 All outputs are saved under /content/results/weather.
 """
@@ -14,10 +14,9 @@ import torch
 import numpy as np
 import pandas as pd
 import kagglehub
-import requests
 from io import StringIO
 from datetime import datetime, timedelta
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler  # Changed from StandardScaler
 import matplotlib.pyplot as plt
 from numpy.typing import ArrayLike
 from samformer import SAMFormer
@@ -69,7 +68,7 @@ def construct_sliding_window_data(data, seq_len, pred_len, time_increment=1):
 def read_weather_dataset(seq_len, pred_len, city):
     """
     Load weather data for a given city, split it into train/test sets,
-    standardize using the training set, and apply a sliding window.
+    normalize using the training set with a MinMaxScaler, and apply a sliding window.
     """
     ts = get_weather_data(city)
     ts = np.array(ts).reshape(-1, 1)
@@ -77,12 +76,16 @@ def read_weather_dataset(seq_len, pred_len, city):
     train_end = int(n * 0.6)
     train_series = ts[:train_end]
     test_series = ts[train_end - seq_len:]
-    scaler = StandardScaler()
+    
+    # Use MinMaxScaler to normalize data to the [0, 1] range
+    scaler = MinMaxScaler()
     scaler.fit(train_series)
     train_series = scaler.transform(train_series)
     test_series = scaler.transform(test_series)
+    
     x_train, y_train = construct_sliding_window_data(train_series, seq_len, pred_len)
     x_test, y_test = construct_sliding_window_data(test_series, seq_len, pred_len)
+    
     # Flatten the targets if SAMFormer expects 2D targets
     flatten = lambda y: y.reshape((y.shape[0], y.shape[1] * y.shape[2]))
     y_train, y_test = flatten(y_train), flatten(y_test)
@@ -126,14 +129,6 @@ def plot_weather_predictions(x_context, y_true, y_pred, title="Predictions vs Gr
     plt.close()
     print(f"Prediction plot saved to {save_path}")
 
-def mase(y_true, y_pred):
-    """
-    Compute the Mean Absolute Scaled Error (MASE).
-    """
-    mae_model = np.mean(np.abs(y_pred - y_true))
-    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
-    return mae_model / naive_mae if naive_mae != 0 else float("inf")
-
 def save_metrics_to_file(metrics: dict, filepath: str):
     with open(filepath, "w") as f:
         json.dump(metrics, f, indent=4)
@@ -166,12 +161,12 @@ def main():
     # Evaluate the model on the test set
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
-    mase_val = mase(y_test, y_pred_test)
+    mae_val = np.mean(np.abs(y_test - y_pred_test))
     print('RMSE:', rmse_val)
-    print('MASE:', mase_val)
+    print('MAE:', mae_val)
 
     # Save metrics to a JSON file in the results directory
-    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics = {"RMSE": float(rmse_val), "MAE": float(mae_val)}
     metrics_filepath = os.path.join(RESULTS_DIR, "metrics.json")
     save_metrics_to_file(metrics, metrics_filepath)
 

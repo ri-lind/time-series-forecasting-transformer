@@ -3,8 +3,8 @@
 covid_samformer.py
 
 This script loads COVID-19 new cases data from a CSV file, constructs sliding-window samples,
-trains a SAMFormer model on the data, evaluates the model (computing RMSE and MASE), and produces
-a plot comparing the ground truth and predictions.
+trains a SAMFormer model on the data, evaluates the model (computing RMSE and MAE),
+and produces a plot comparing the ground truth and predictions.
 All results (plots and metrics) are saved under /content/results/healthcare.
 """
 
@@ -16,7 +16,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 from io import StringIO
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler  # Changed from StandardScaler
 import matplotlib.pyplot as plt
 
 # Import SAMFormer from the samformer package
@@ -78,7 +78,7 @@ def construct_sliding_window_data(data, seq_len, pred_len, time_increment=1):
 def train_test_split(seq_len, pred_len):
     """
     Load the COVID-19 new cases data, split it into training and testing sets,
-    normalize using StandardScaler based on the training set, and generate sliding-window samples.
+    normalize using a MinMaxScaler based on the training set, and generate sliding-window samples.
 
     Args:
       seq_len (int): Historical context length.
@@ -93,20 +93,20 @@ def train_test_split(seq_len, pred_len):
     train_end = int(n * 0.6)
     train_series = ts[:train_end]
     test_series = ts[train_end - seq_len:]
-
-    # Normalize data based on training set
-    scaler = StandardScaler()
+    
+    # Normalize data based on training set using MinMaxScaler
+    scaler = MinMaxScaler()
     scaler.fit(train_series)
     train_series = scaler.transform(train_series)
     test_series = scaler.transform(test_series)
-
+    
     x_train, y_train = construct_sliding_window_data(train_series, seq_len, pred_len)
     x_test, y_test = construct_sliding_window_data(test_series, seq_len, pred_len)
-
+    
     # Flatten targets if SAMFormer expects 2D targets
     flatten = lambda y: y.reshape((y.shape[0], y.shape[1] * y.shape[2]))
     y_train, y_test = flatten(y_train), flatten(y_test)
-
+    
     return (x_train, y_train), (x_test, y_test)
 
 
@@ -161,22 +161,6 @@ def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Tr
     print(f"Prediction plot saved to {output_path}")
 
 
-def mase(y_true, y_pred):
-    """
-    Compute the Mean Absolute Scaled Error (MASE).
-
-    Args:
-      y_true (np.ndarray): Ground truth values.
-      y_pred (np.ndarray): Predicted values.
-
-    Returns:
-      float: The MASE value.
-    """
-    mae_model = np.mean(np.abs(y_pred - y_true))
-    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
-    return mae_model / naive_mae if naive_mae != 0 else float("inf")
-
-
 def main():
     # Set output directory for plots and metrics
     output_dir = "/content/results/healthcare"
@@ -207,16 +191,16 @@ def main():
                       use_revin=True)
     model.fit(x_train, y_train)
 
-    # Evaluate model on test set
+    # Evaluate model on test set using RMSE and MAE
     print("Evaluating model on test data...")
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
-    mase_val = mase(y_test, y_pred_test)
+    mae_val = np.mean(np.abs(y_test - y_pred_test))
     print("RMSE:", rmse_val)
-    print("MASE:", mase_val)
+    print("MAE:", mae_val)
 
     # Save metrics to a JSON file
-    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics = {"RMSE": float(rmse_val), "MAE": float(mae_val)}
     metrics_filepath = os.path.join(output_dir, "metrics.json")
     with open(metrics_filepath, "w") as f:
         json.dump(metrics, f, indent=4)

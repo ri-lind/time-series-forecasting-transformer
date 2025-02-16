@@ -4,7 +4,7 @@ energy_samformer.py
 
 This script downloads hourly energy consumption data for a given year,
 constructs sliding-window samples, trains a SAMFormer model, evaluates the model
-(using RMSE and MASE metrics), and saves sample prediction plots.
+(using RMSE and MAE metrics), and saves sample prediction plots.
 All results (plots and metrics) are saved under /content/results/energy.
 """
 
@@ -16,7 +16,7 @@ import pandas as pd
 import requests
 from datetime import datetime, timedelta
 from io import StringIO
-from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler  # Changed to MinMaxScaler
 import matplotlib.pyplot as plt
 
 # Import SAMFormer from the samformer package
@@ -84,7 +84,7 @@ def construct_sliding_window_data(data, seq_len, pred_len, time_increment=1):
 def read_library_energy_dataset(seq_len, pred_len, year):
     """
     Load energy consumption data for a given year, split it into train/test sets,
-    and apply a sliding window.
+    normalize using the training set with a MinMaxScaler, and apply a sliding window.
 
     Args:
       seq_len (int): Length of historical context.
@@ -102,11 +102,11 @@ def read_library_energy_dataset(seq_len, pred_len, year):
     train_series = ts[:train_end]
     test_series = ts[train_end - seq_len:]
 
-    # (Optional) Uncomment below to normalize data.
-    # scaler = StandardScaler()
-    # scaler.fit(train_series)
-    # train_series = scaler.transform(train_series)
-    # test_series = scaler.transform(test_series)
+    # Normalize using MinMaxScaler
+    scaler = MinMaxScaler()
+    scaler.fit(train_series)
+    train_series = scaler.transform(train_series)
+    test_series = scaler.transform(test_series)
 
     x_train, y_train = construct_sliding_window_data(train_series, seq_len, pred_len)
     x_test, y_test = construct_sliding_window_data(test_series, seq_len, pred_len)
@@ -169,22 +169,6 @@ def plot(x_context, y_true, y_pred, output_path, title="Predictions vs Ground Tr
     print(f"Prediction plot saved to {output_path}")
 
 
-def mase(y_true, y_pred):
-    """
-    Compute the Mean Absolute Scaled Error (MASE).
-
-    Args:
-      y_true (np.ndarray): Ground truth values.
-      y_pred (np.ndarray): Predicted values.
-
-    Returns:
-      float: The MASE value.
-    """
-    mae_model = np.mean(np.abs(y_pred - y_true))
-    naive_mae = np.mean(np.abs(y_true[1:] - y_true[:-1]))
-    return mae_model / naive_mae if naive_mae != 0 else float("inf")
-
-
 def main():
     # Set output directory for plots and metrics
     output_dir = "/content/results/energy"
@@ -219,12 +203,12 @@ def main():
     print("Evaluating model on test data...")
     y_pred_test = model.predict(x_test)
     rmse_val = np.sqrt(np.mean((y_test - y_pred_test) ** 2))
-    mase_val = mase(y_test, y_pred_test)
+    mae_val = np.mean(np.abs(y_test - y_pred_test))
     print("RMSE:", rmse_val)
-    print("MASE:", mase_val)
+    print("MAE:", mae_val)
 
     # Save metrics to a JSON file
-    metrics = {"RMSE": float(rmse_val), "MASE": float(mase_val)}
+    metrics = {"RMSE": float(rmse_val), "MAE": float(mae_val)}
     metrics_filepath = os.path.join(output_dir, "metrics.json")
     with open(metrics_filepath, "w") as f:
         json.dump(metrics, f, indent=4)
