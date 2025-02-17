@@ -158,7 +158,6 @@ class TSGenerationMixin(GenerationMixin):
             model_kwargs = self._update_model_kwargs_for_generation(
                 outputs,
                 model_kwargs,
-                horizon_length=horizon_length,
                 is_encoder_decoder=self.config.is_encoder_decoder,
             )
 
