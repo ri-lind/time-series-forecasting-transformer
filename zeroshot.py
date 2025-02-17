@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 from transformers import AutoModelForCausalLM
 import torch
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import MinMaxScaler  # Import MinMaxScaler
 
 def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
@@ -22,7 +23,13 @@ def get_weather_data(city: str) -> ArrayLike:
         df = df.dropna(subset=['tavg'])  # Remove rows where 'tavg' is NaN
         data_frames.append(df['tavg'])
     concatenated_data = pd.concat(data_frames, ignore_index=True)
-    return concatenated_data.values
+    
+    # Scale the data using MinMaxScaler
+    scaler = MinMaxScaler()
+    data_reshaped = concatenated_data.values.reshape(-1, 1)
+    scaled_data = scaler.fit_transform(data_reshaped).flatten()
+    
+    return scaled_data
 
 def get_finance_data():
     """
@@ -32,7 +39,13 @@ def get_finance_data():
     df = pd.read_csv(CSV_FILE_ABSOLUTE_PATH)
     # Assuming the second column holds the desired data.
     df = df.iloc[:, 1]
-    return df.values
+    
+    # Scale the data using MinMaxScaler
+    scaler = MinMaxScaler()
+    data = df.values.reshape(-1, 1)
+    scaled_data = scaler.fit_transform(data).flatten()
+    
+    return scaled_data
 
 def get_consumption_data_year(year: int):
     """
@@ -57,7 +70,12 @@ def get_consumption_data_year(year: int):
     combined_data = pd.concat(all_data, ignore_index=True)
     string_values = combined_data.iloc[:, 1].values
     values_float = np.array([float(w.replace(',', '')) for w in string_values])
-    return values_float
+    
+    # Scale the data using MinMaxScaler
+    scaler = MinMaxScaler()
+    scaled_values = scaler.fit_transform(values_float.reshape(-1, 1)).flatten()
+    
+    return scaled_values
 
 def get_new_cases_by_country(df: pd.DataFrame) -> dict:
     """
@@ -84,10 +102,17 @@ def get_healthcare_data(country: str) -> ArrayLike:
     new_cases = cases_dict.get(country)
     if new_cases is None:
         raise ValueError(f"Country '{country}' not found in dataset")
-    return new_cases[200:1200]
+    
+    sliced_cases = new_cases[200:1200]
+    
+    # Scale the data using MinMaxScaler
+    scaler = MinMaxScaler()
+    scaled_cases = scaler.fit_transform(sliced_cases.reshape(-1, 1)).flatten()
+    
+    return scaled_cases
 
 # ---------------------------
-# ZeroShotForecast Class
+# ZeroShotForecast Class (unchanged except for metric calculation)
 # ---------------------------
 
 class ZeroShotForecast:
@@ -110,6 +135,7 @@ class ZeroShotForecast:
         self.results_dir = results_dir
         os.makedirs(self.results_dir, exist_ok=True)
         self.model = None
+        self.training_data = None  # Will store training data for MASE computation
 
     def load_model(self):
         print(f"Loading model {self.model_name} on device {self.device} ...")
@@ -118,9 +144,6 @@ class ZeroShotForecast:
             device_map=self.device,  # "cpu" or "cuda"
             trust_remote_code=True,
         )
-        # If using flash-attn on GPU (if available), you could add:
-        # self.model = AutoModelForCausalLM.from_pretrained(
-        #    self.model_name, device_map="auto", attn_implementation='flash_attention_2', trust_remote_code=True)
         self.model.eval()
 
     def prepare_data(self):
@@ -128,12 +151,14 @@ class ZeroShotForecast:
         Splits the full data into training (first 60%) and test (remaining 40%),
         then extracts the context (last context_length of training data) and
         the ground truth forecast (first prediction_length of test data).
+        Also stores the training data for MASE computation.
         """
         sequence_list = self.data.tolist() if hasattr(self.data, "tolist") else list(self.data)
         split_idx = int(len(sequence_list) * 0.6)
         training_data = sequence_list[:split_idx]
         test_data = sequence_list[split_idx:]
-
+        self.training_data = np.array(training_data, dtype=np.float32)
+        
         if len(training_data) < self.context_length:
             raise ValueError("Not enough training data for the specified context length.")
         if len(test_data) < self.prediction_length:
@@ -167,13 +192,15 @@ class ZeroShotForecast:
 
         return predictions_np, ground_truth
 
-    @staticmethod
-    def calculate_metrics(predictions: np.ndarray, ground_truth: np.ndarray) -> dict:
-        mse = np.mean((predictions - ground_truth) ** 2)
+    def calculate_metrics(self, predictions: np.ndarray, ground_truth: np.ndarray) -> dict:
+        # Standard metrics: MAE and RMSE
         mae = np.mean(np.abs(predictions - ground_truth))
+        mse = np.mean((predictions - ground_truth) ** 2)
         rmse = np.sqrt(mse)
-        return {"MSE": float(mse), "MAE": float(mae), "RMSE": float(rmse)}
-
+        # Compute naive forecast error from training data (mean absolute difference)
+        naive_error = np.mean(np.abs(np.diff(self.training_data)))
+        mase = mae / (naive_error + 1e-8)
+        return {"RMSE": float(rmse), "MAE": float(mae), "MASE": float(mase)}
 
     def plot_results(self, predictions: np.ndarray, ground_truth: np.ndarray) -> str:
         plt.figure(figsize=(10, 5))
