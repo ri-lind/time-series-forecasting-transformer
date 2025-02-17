@@ -167,7 +167,12 @@ def main():
     with open(f"{jsonl_dir}/test_{file_suffix}.jsonl", "w", encoding="utf-8") as f_test:
         f_test.write(json.dumps(test_dict) + "\n")
 
-    test_df = pd.DataFrame(test_data, columns=[column_name])
+    # Create test CSV with two columns: the data column and an additional date column.
+    # Generate a dummy date range starting from '2020-01-01'
+    test_df = pd.DataFrame({
+        column_name: test_data,
+        'date': pd.date_range(start='2020-01-01', periods=len(test_data), freq='D')
+    })
     test_df.to_csv(f"{csv_dir}/test_{file_suffix}.csv", index=False)
 
 if __name__ == "__main__":
