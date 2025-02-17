@@ -8,6 +8,7 @@ import argparse
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
+from sklearn.preprocessing import MinMaxScaler  # Import the scaler
 
 def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
@@ -19,7 +20,13 @@ def get_weather_data(city: str) -> ArrayLike:
         df = df.dropna(subset=['tavg'])  # Remove rows where 'tavg' is NaN
         data_frames.append(df['tavg'])
     concatenated_data = pd.concat(data_frames, ignore_index=True)
-    return concatenated_data.values
+    
+    # Apply MinMaxScaler
+    scaler = MinMaxScaler()
+    data_reshaped = concatenated_data.values.reshape(-1, 1)
+    scaled_data = scaler.fit_transform(data_reshaped).flatten()
+    
+    return scaled_data
 
 def get_finance_data():
     """
@@ -29,7 +36,13 @@ def get_finance_data():
     df = pd.read_csv(CSV_FILE_ABSOLUTE_PATH)
     # Assuming the second column holds the desired data.
     df = df.iloc[:, 1]
-    return df.values
+    
+    # Apply MinMaxScaler
+    scaler = MinMaxScaler()
+    data = df.values.reshape(-1, 1)
+    scaled_data = scaler.fit_transform(data).flatten()
+    
+    return scaled_data
 
 def get_consumption_data_year(year: int):
     """
@@ -54,7 +67,12 @@ def get_consumption_data_year(year: int):
     combined_data = pd.concat(all_data, ignore_index=True)
     string_values = combined_data.iloc[:, 1].values
     values_float = np.array([float(w.replace(',', '')) for w in string_values])
-    return values_float
+    
+    # Apply MinMaxScaler
+    scaler = MinMaxScaler()
+    scaled_values = scaler.fit_transform(values_float.reshape(-1, 1)).flatten()
+    
+    return scaled_values
 
 def get_new_cases_by_country(df: pd.DataFrame) -> dict:
     """
@@ -81,7 +99,14 @@ def get_healthcare_data(country: str) -> ArrayLike:
     new_cases = cases_dict.get(country)
     if new_cases is None:
         raise ValueError(f"Country '{country}' not found in dataset")
-    return new_cases[200:1200]
+    
+    sliced_cases = new_cases[200:1200]
+    
+    # Apply MinMaxScaler
+    scaler = MinMaxScaler()
+    scaled_cases = scaler.fit_transform(sliced_cases.reshape(-1, 1)).flatten()
+    
+    return scaled_cases
 
 def main():
     # Disable default help (-h/--help) so that -h can be used for healthcare data.
