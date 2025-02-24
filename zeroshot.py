@@ -266,6 +266,8 @@ def main():
         raise ValueError("No valid data source argument provided.")
 
     # Instantiate and run the forecasting class
+    
+    print("Experiment with 64 - 32 split")
     forecast_engine = ZeroShotForecast(
         data=data,
         context_length=64,
@@ -275,6 +277,9 @@ def main():
         results_dir="zeroshot_results_small"
     )
     forecast_engine.run()
+    
+    
+    print("Experiment with 128 - 64 split")
     forecast_engine = ZeroShotForecast(
         data=data,
         context_length=128,
@@ -284,6 +289,9 @@ def main():
         results_dir="zeroshot_results_medium"
     )
     forecast_engine.run()
+    
+    
+    print("Experiment with 256 - 128 split")
     forecast_engine = ZeroShotForecast(
         data=data,
         context_length=256,
