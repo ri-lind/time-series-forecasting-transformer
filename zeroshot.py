@@ -249,19 +249,24 @@ def main():
     parser.add_argument("--device", default="cpu", help="Device to run the model on: 'cpu' or 'cuda'")
     args = parser.parse_args()
 
+    data_type = ""
     # Fetch the data based on the provided argument
     if args.finance:
         print("Fetching finance data ...")
         data = get_finance_data()
+        data_type = "finance"
     elif args.energy:
         print(f"Fetching energy data for year {args.year} ...")
         data = get_consumption_data_year(args.year)
+        data_type = "energy"
     elif args.city:
         print(f"Fetching weather data for city {args.city} ...")
         data = get_weather_data(args.city)
+        data_type = "weather"
     elif args.healthcare:
         print(f"Fetching healthcare data for country {args.healthcare} ...")
         data = get_healthcare_data(args.healthcare)
+        data_type = "healthcare"
     else:
         raise ValueError("No valid data source argument provided.")
 
@@ -274,7 +279,7 @@ def main():
         prediction_length=32,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir="zeroshot_results_small"
+        results_dir=f"{data_type}_zeroshot_results_small"
     )
     forecast_engine.run()
     
@@ -286,7 +291,7 @@ def main():
         prediction_length=64,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir="zeroshot_results_medium"
+        results_dir=f"{data_type}_zeroshot_results_medium"
     )
     forecast_engine.run()
     
@@ -298,7 +303,7 @@ def main():
         prediction_length=128,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir="zeroshot_results_large"
+        results_dir=f"{data_type}_zeroshot_results_large"
     )
     forecast_engine.run()
 
