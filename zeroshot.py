@@ -11,7 +11,7 @@ from datetime import datetime, timedelta
 from transformers import AutoModelForCausalLM
 import torch
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import MinMaxScaler  # Import MinMaxScaler
+from sklearn.preprocessing import StandardScaler  # Import StandardScaler
 
 def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
@@ -24,8 +24,8 @@ def get_weather_data(city: str) -> ArrayLike:
         data_frames.append(df['tavg'])
     concatenated_data = pd.concat(data_frames, ignore_index=True)
     
-    # Scale the data using MinMaxScaler
-    scaler = MinMaxScaler()
+    # Scale the data using StandardScaler
+    scaler = StandardScaler()
     data_reshaped = concatenated_data.values.reshape(-1, 1)
     scaled_data = scaler.fit_transform(data_reshaped).flatten()
     
@@ -40,8 +40,8 @@ def get_finance_data():
     # Assuming the second column holds the desired data.
     df = df.iloc[:, 1]
     
-    # Scale the data using MinMaxScaler
-    scaler = MinMaxScaler()
+    # Scale the data using StandardScaler
+    scaler = StandardScaler()
     data = df.values.reshape(-1, 1)
     scaled_data = scaler.fit_transform(data).flatten()
     
@@ -71,8 +71,8 @@ def get_consumption_data_year(year: int):
     string_values = combined_data.iloc[:, 1].values
     values_float = np.array([float(w.replace(',', '')) for w in string_values])
     
-    # Scale the data using MinMaxScaler
-    scaler = MinMaxScaler()
+    # Scale the data using StandardScaler
+    scaler = StandardScaler()
     scaled_values = scaler.fit_transform(values_float.reshape(-1, 1)).flatten()
     
     return scaled_values
@@ -105,8 +105,8 @@ def get_healthcare_data(country: str) -> ArrayLike:
     
     sliced_cases = new_cases[200:1200]
     
-    # Scale the data using MinMaxScaler
-    scaler = MinMaxScaler()
+    # Scale the data using StandardScaler
+    scaler = StandardScaler()
     scaled_cases = scaler.fit_transform(sliced_cases.reshape(-1, 1)).flatten()
     
     return scaled_cases
@@ -268,11 +268,29 @@ def main():
     # Instantiate and run the forecasting class
     forecast_engine = ZeroShotForecast(
         data=data,
+        context_length=64,
+        prediction_length=32,
+        model_name='Maple728/TimeMoE-50M',
+        device=args.device,
+        results_dir="zeroshot_results_small"
+    )
+    forecast_engine.run()
+    forecast_engine = ZeroShotForecast(
+        data=data,
+        context_length=128,
+        prediction_length=64,
+        model_name='Maple728/TimeMoE-50M',
+        device=args.device,
+        results_dir="zeroshot_results_medium"
+    )
+    forecast_engine.run()
+    forecast_engine = ZeroShotForecast(
+        data=data,
         context_length=256,
         prediction_length=128,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir="zeroshot_results"
+        results_dir="zeroshot_results_large"
     )
     forecast_engine.run()
 
