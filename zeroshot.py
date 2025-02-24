@@ -279,7 +279,7 @@ def main():
         prediction_length=32,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir=f"{data_type}_zeroshot_results_small"
+        results_dir=f"results/{data_type}_zeroshot_results_small"
     )
     forecast_engine.run()
     
@@ -291,7 +291,7 @@ def main():
         prediction_length=64,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir=f"{data_type}_zeroshot_results_medium"
+        results_dir=f"results/{data_type}_zeroshot_results_medium"
     )
     forecast_engine.run()
     
@@ -303,7 +303,7 @@ def main():
         prediction_length=128,
         model_name='Maple728/TimeMoE-50M',
         device=args.device,
-        results_dir=f"{data_type}_zeroshot_results_large"
+        results_dir=f"results/{data_type}_zeroshot_results_large"
     )
     forecast_engine.run()
 
