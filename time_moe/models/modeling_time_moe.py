@@ -937,16 +937,27 @@ class TimeMoeOutputLayer(nn.Module):
 
 
 class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
-
-    def __init__(self, config: TimeMoeConfig):
+    def __init__(self, config: TimeMoeConfig, context_length: Optional[int] = None, prediction_length: Optional[int] = None):
         super().__init__(config)
         self.config = config
         self.apply_aux_loss = config.apply_aux_loss
         self.num_experts_per_tok = config.num_experts_per_tok
         self.router_aux_loss_factor = config.router_aux_loss_factor
 
+        # Set the context and prediction lengths.
+        # If not provided, try to get them from the config (or leave as None).
+        self.context_length = context_length if context_length is not None else getattr(config, "context_length", None)
+        self.prediction_length = prediction_length if prediction_length is not None else getattr(config, "prediction_length", None)
+
+        # Instantiate the underlying model.
         self.model = TimeMoeModel(config)
-        # output layer
+        # Pass the extra parameters to the underlying model.
+        if self.context_length is not None:
+            self.model.context_length = self.context_length
+        if self.prediction_length is not None:
+            self.model.prediction_length = self.prediction_length
+
+        # Build output layers.
         lm_head_list = []
         self.horizon_length_map = {}
         for i, horizon_length in enumerate(config.horizon_lengths):
@@ -962,8 +973,9 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
 
         self.loss_function = torch.nn.HuberLoss(reduction='none', delta=2.0)
 
-        # Initialize weights and apply final processing
+        # Final initialization.
         self.post_init()
+
 
     def set_decoder(self, decoder):
         self.model = decoder
