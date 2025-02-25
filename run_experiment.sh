@@ -171,10 +171,11 @@ CONFIG_PATH="/content/time-moe/${FILE_SUFFIX}/config.json"
 
 if [ -f "$CONFIG_PATH" ]; then
     echo "Updating horizon_lengths in $CONFIG_PATH..."
-    sed -i 's/"horizon_lengths": \[\(.*\)\]/"horizon_lengths": [\1, 128]/' "$CONFIG_PATH"
+    sed -i '/"horizon_lengths": \[/ s/\]/, 128]/' "$CONFIG_PATH"
 else
     echo "Warning: Config file not found at $CONFIG_PATH"
 fi
+
 
 
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
