@@ -166,15 +166,51 @@ elif [ -n "$CITY" ]; then
     fi
 fi
 
-# Modify config.json to add 128 to horizon_lengths (if it exists)
 CONFIG_PATH="/content/time-moe/${FILE_SUFFIX}/config.json"
 
-if [ -f "$CONFIG_PATH" ]; then
-    echo "Updating horizon_lengths in $CONFIG_PATH..."
-    sed -i '/"horizon_lengths": \[/ s/\]/, 128]/' "$CONFIG_PATH"
-else
-    echo "Warning: Config file not found at $CONFIG_PATH"
-fi
+cat <<EOF > "$CONFIG_PATH"
+{
+  "_name_or_path": "time_moe_50m",
+  "apply_aux_loss": true,
+  "architectures": [
+    "TimeMoeForPrediction"
+  ],
+  "auto_map": {
+    "AutoConfig": "configuration_time_moe.TimeMoeConfig",
+    "AutoModelForCausalLM": "modeling_time_moe.TimeMoeForPrediction"
+  },
+  "attention_dropout": 0.0,
+  "hidden_act": "silu",
+  "hidden_size": 384,
+  "horizon_lengths": [
+    1,
+    8,
+    32,
+    64,
+    128
+  ],
+  "initializer_range": 0.02,
+  "input_size": 1,
+  "intermediate_size": 1536,
+  "max_position_embeddings": 4096,
+  "model_type": "time_moe",
+  "num_attention_heads": 12,
+  "num_experts": 8,
+  "num_experts_per_tok": 2,
+  "num_hidden_layers": 12,
+  "num_key_value_heads": 12,
+  "rms_norm_eps": 1e-06,
+  "rope_theta": 10000,
+  "router_aux_loss_factor": 0.02,
+  "tie_word_embeddings": false,
+  "torch_dtype": "bfloat16",
+  "transformers_version": "4.40.1",
+  "use_cache": true,
+  "use_dense": false
+}
+EOF
+
+echo "Configuration file overwritten: $CONFIG_PATH"
 
 
 
