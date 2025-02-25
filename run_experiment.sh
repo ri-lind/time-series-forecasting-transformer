@@ -166,6 +166,17 @@ elif [ -n "$CITY" ]; then
     fi
 fi
 
+# Modify config.json to add 128 to horizon_lengths (if it exists)
+CONFIG_PATH="/content/time-moe/${FILE_SUFFIX}/config.json"
+
+if [ -f "$CONFIG_PATH" ]; then
+    echo "Updating horizon_lengths in $CONFIG_PATH..."
+    sed -i 's/"horizon_lengths": \[\(.*\)\]/"horizon_lengths": [\1, 128]/' "$CONFIG_PATH"
+else
+    echo "Warning: Config file not found at $CONFIG_PATH"
+fi
+
+
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 256
