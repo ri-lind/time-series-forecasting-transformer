@@ -25,20 +25,10 @@ class BenchmarkEvalDataset(Dataset):
             df['date'] = pd.date_range(start='2020-01-01', periods=len(df), freq='D')
             log_in_local_rank_0(">>> 'date' column not found in CSV. A synthetic date column has been added.")
 
-        # Determine splitting borders based on file type or overall length.
-        base_name = os.path.basename(csv_path).lower()
-        if 'etth' in base_name:
-            border1s = [0, 12 * 30 * 24 - context_length, 12 * 30 * 24 + 4 * 30 * 24 - context_length]
-            border2s = [12 * 30 * 24, 12 * 30 * 24 + 4 * 30 * 24, 12 * 30 * 24 + 8 * 30 * 24]
-        elif 'ettm' in base_name:
-            border1s = [0, 12 * 30 * 24 * 4 - context_length, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4 - context_length]
-            border2s = [12 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 4 * 30 * 24 * 4, 12 * 30 * 24 * 4 + 8 * 30 * 24 * 4]
-        else:
-            num_train = int(len(df) * 0.7)
-            num_test = int(len(df) * 0.2)
-            num_vali = len(df) - num_train - num_test
-            border1s = [0, num_train - context_length, len(df) - num_test - context_length]
-            border2s = [num_train, num_train + num_vali, len(df)]
+        # Instead of splitting the dataset into train/validation/test with 70/20/10 ratios,
+        # use the entire dataset as test data.
+        border1s = [0, 0, 0]
+        border2s = [len(df), len(df), len(df)]
 
         # Log splitting information using the date column.
         if 'date' in df.columns:
@@ -55,22 +45,19 @@ class BenchmarkEvalDataset(Dataset):
                 f'evaluation starts at index {border1s[2] + context_length}'
             )
 
-        # Select only the numeric columns.
-        # Instead of assuming the first column is the date (by slicing columns[1:]),
-        # we explicitly exclude any column named "date".
+        # Select only the numeric columns (excluding 'date').
         numeric_cols = [col for col in df.columns if col != 'date']
         df_values = df[numeric_cols].values
 
-        # Define train and test splits using the computed borders.
-        train_data = df_values[border1s[0]:border2s[0]]
+        # In this modified version, the entire dataset is used as test data.
         test_data = df_values[border1s[2]:border2s[2]]
 
-        # Scaling: fit on train_data and transform test_data.
+        # Scaling: fit on the whole dataset and transform.
         scaler = StandardScaler()
-        scaler.fit(train_data)
+        scaler.fit(test_data)
         scaled_test_data = scaler.transform(test_data)
 
-        # Assignment: transpose so that each sequence becomes a row in hf_dataset.
+        # Assignment: transpose so that each sequence becomes a row.
         self.hf_dataset = scaled_test_data.transpose(1, 0)
         self.num_sequences = len(self.hf_dataset)
         self.window_length = self.context_length + self.prediction_length
