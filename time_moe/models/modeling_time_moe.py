@@ -843,7 +843,7 @@ class TimeMoeModel(TimeMoePreTrainedModel):
             (batch_size, seq_length),
             inputs_embeds,
             past_key_values_length,
-            sliding_window=None,
+            sliding_window=self.context_length + self.prediction_length,
         )
 
         hidden_states = inputs_embeds
