@@ -1175,3 +1175,14 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
                 tuple(past_state.index_select(0, beam_idx.to(past_state.device)) for past_state in layer_past),
             )
         return reordered_past
+    
+    @classmethod
+    def from_pretrained(cls, model_path, context_length=None, prediction_length=None, **kwargs):
+        model = super().from_pretrained(model_path, **kwargs)
+        if context_length is not None:
+            model.context_length = context_length
+        if prediction_length is not None:
+            model.prediction_length = prediction_length
+        return model
+
+

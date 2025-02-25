@@ -85,6 +85,8 @@ class TimeMoE:
                 device_map=device,
                 # attn_implementation='flash_attention_2',
                 torch_dtype='auto',
+                context_length=context_length,
+                prediction_length=prediction_length
             )
         except:
             model = AutoModelForCausalLM.from_pretrained(
