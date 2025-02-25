@@ -763,7 +763,7 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         config: TimeMoeConfig
     """
 
-    def __init__(self, config: TimeMoeConfig):
+    def __init__(self, config: TimeMoeConfig, context_length : int = None, prediction_length : int = None):
         super().__init__(config)
         self.embed_layer = TimeMoeInputEmbedding(config)
         self.layers = nn.ModuleList(
@@ -773,6 +773,11 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         self.norm = TimeMoeRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
 
         self.gradient_checkpointing = False
+        
+        if context_length is not None and prediction_length is not None:
+            self.context_length = context_length
+            self.prediction_length = prediction_length
+        
         # Initialize weights and apply final processing
         self.post_init()
 
@@ -959,12 +964,12 @@ class TimeMoeForPrediction(TimeMoePreTrainedModel, TSGenerationMixin):
         self.prediction_length = prediction_length if prediction_length is not None else getattr(config, "prediction_length", None)
 
         # Instantiate the underlying model.
-        self.model = TimeMoeModel(config)
         # Pass the extra parameters to the underlying model.
-        if self.context_length is not None:
-            self.model.context_length = self.context_length
-        if self.prediction_length is not None:
-            self.model.prediction_length = self.prediction_length
+        
+        if self.context_length is not None and self.prediction_length is not None:
+            self.model = TimeMoeModel(config, context_length, prediction_length)
+        else:
+            self.model = TimeMoeModel(config)
 
         # Build output layers.
         lm_head_list = []
