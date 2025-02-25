@@ -168,4 +168,4 @@ fi
 
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
 python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
-python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 192
+python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 128
