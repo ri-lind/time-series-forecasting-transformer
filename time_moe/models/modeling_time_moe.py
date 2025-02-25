@@ -842,11 +842,11 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         else:
             sliding = None
     
-        logger.info(f"Batch size: {batch_size}, Seq length: {seq_length}")
-        logger.info(f"inputs_embeds shape: {inputs_embeds.shape if inputs_embeds is not None else 'None'}")
-        logger.info(f"past_key_values_length: {past_key_values_length}")
-        logger.info(f"Sliding window value: {sliding}")
-        logger.info(f"Attention mask (before): {attention_mask.shape if attention_mask is not None else 'None'}")
+        print(f"Batch size: {batch_size}, Seq length: {seq_length}")
+        print(f"inputs_embeds shape: {inputs_embeds.shape if inputs_embeds is not None else 'None'}")
+        print(f"past_key_values_length: {past_key_values_length}")
+        print(f"Sliding window value: {sliding}")
+        print(f"Attention mask (before): {attention_mask.shape if attention_mask is not None else 'None'}")
 
         attention_mask = _prepare_4d_causal_attention_mask(
             attention_mask,
