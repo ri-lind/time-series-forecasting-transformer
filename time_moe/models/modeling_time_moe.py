@@ -838,13 +838,22 @@ class TimeMoeModel(TimeMoePreTrainedModel):
             inputs_embeds = self.embed_layer(input_ids)
 
         # 4d mask is passed through the layers
-        attention_mask = _prepare_4d_causal_attention_mask(
-            attention_mask,
-            (batch_size, seq_length),
-            inputs_embeds,
-            past_key_values_length,
-            sliding_window=self.context_length + self.prediction_length,
-        )
+        if self.context_length and self.prediction_length: 
+            attention_mask = _prepare_4d_causal_attention_mask(
+                attention_mask,
+                (batch_size, seq_length),
+                inputs_embeds,
+                past_key_values_length,
+                sliding_window = self.context_length + self.prediction_length,
+            )
+        else:
+            attention_mask = _prepare_4d_causal_attention_mask(
+                attention_mask,
+                (batch_size, seq_length),
+                inputs_embeds,
+                past_key_values_length,
+                sliding_window = None,
+            )
 
         hidden_states = inputs_embeds
 
