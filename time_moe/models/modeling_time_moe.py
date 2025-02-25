@@ -836,7 +836,9 @@ class TimeMoeModel(TimeMoePreTrainedModel):
             inputs_embeds = self.embed_layer(input_ids)
 
         if self.context_length > 0 and self.prediction_length > 0:
-            sliding = self.context_length + self.prediction_length
+            desired_window = self.context_length + self.prediction_length
+            effective_length = seq_length + past_key_values_length
+            sliding = min(desired_window, effective_length)
         else:
             sliding = None
 
@@ -847,6 +849,7 @@ class TimeMoeModel(TimeMoePreTrainedModel):
             past_key_values_length,
             sliding_window=sliding,
         )
+
 
 
         hidden_states = inputs_embeds
