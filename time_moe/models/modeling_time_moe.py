@@ -844,7 +844,7 @@ class TimeMoeModel(TimeMoePreTrainedModel):
 
         attention_mask = _prepare_4d_causal_attention_mask(
             attention_mask,
-            (batch_size, seq_length),
+            (batch_size, sliding), # changed from seq_length
             inputs_embeds,
             past_key_values_length,
             sliding_window=sliding,

@@ -103,6 +103,10 @@ class TimeMoE:
         self.device = device
         self.prediction_length = prediction_length
         self.context_length = context_length
+        
+        self.model.context_length = context_length
+        self.model.prediction_length = prediction_length
+        
         self.model.eval()
 
     def predict(self, batch):
