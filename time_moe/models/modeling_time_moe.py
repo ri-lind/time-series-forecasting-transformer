@@ -756,14 +756,7 @@ class TimeMoePreTrainedModel(PreTrainedModel):
 
 
 class TimeMoeModel(TimeMoePreTrainedModel):
-    """
-    Transformer decoder consisting of *config.num_hidden_layers* layers. Each layer is a [`TimeMoeDecoderLayer`]
-
-    Args:
-        config: TimeMoeConfig
-    """
-
-    def __init__(self, config: TimeMoeConfig, context_length : int = None, prediction_length : int = None):
+    def __init__(self, config: TimeMoeConfig, context_length: Optional[int] = None, prediction_length: Optional[int] = None):
         super().__init__(config)
         self.embed_layer = TimeMoeInputEmbedding(config)
         self.layers = nn.ModuleList(
@@ -771,15 +764,15 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         )
         self._attn_implementation = config._attn_implementation
         self.norm = TimeMoeRMSNorm(config.hidden_size, eps=config.rms_norm_eps)
-
         self.gradient_checkpointing = False
         
-        if context_length is not None and prediction_length is not None:
-            self.context_length = context_length
-            self.prediction_length = prediction_length
+        # Always set these attributes. If not provided, default to 0 (or another appropriate default).
+        self.context_length = context_length if context_length is not None else 0
+        self.prediction_length = prediction_length if prediction_length is not None else 0
         
         # Initialize weights and apply final processing
         self.post_init()
+
 
     def forward(
             self,
@@ -842,23 +835,19 @@ class TimeMoeModel(TimeMoePreTrainedModel):
         if inputs_embeds is None:
             inputs_embeds = self.embed_layer(input_ids)
 
-        # 4d mask is passed through the layers
-        if self.context_length and self.prediction_length: 
-            attention_mask = _prepare_4d_causal_attention_mask(
-                attention_mask,
-                (batch_size, seq_length),
-                inputs_embeds,
-                past_key_values_length,
-                sliding_window = self.context_length + self.prediction_length,
-            )
+        if self.context_length > 0 and self.prediction_length > 0:
+            sliding = self.context_length + self.prediction_length
         else:
-            attention_mask = _prepare_4d_causal_attention_mask(
-                attention_mask,
-                (batch_size, seq_length),
-                inputs_embeds,
-                past_key_values_length,
-                sliding_window = None,
-            )
+            sliding = None
+
+        attention_mask = _prepare_4d_causal_attention_mask(
+            attention_mask,
+            (batch_size, seq_length),
+            inputs_embeds,
+            past_key_values_length,
+            sliding_window=sliding,
+        )
+
 
         hidden_states = inputs_embeds
 
