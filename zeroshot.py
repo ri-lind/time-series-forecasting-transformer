@@ -174,23 +174,17 @@ class ZeroShotForecast:
         # Convert context to tensor with shape [1, context_length]
         context_tensor = torch.tensor(context, dtype=torch.float32).unsqueeze(0)
 
-        # Normalize the context along the last dimension (per sample)
-        mean = context_tensor.mean(dim=-1, keepdim=True)
-        std = context_tensor.std(dim=-1, keepdim=True)
-        normed_context = (context_tensor - mean) / std
-
-        # Forecast using the model
+        # Forecast using the model without any normalization
         print("Generating forecast ...")
         with torch.no_grad():
-            output = self.model.generate(normed_context, max_new_tokens=self.prediction_length)
+            output = self.model.generate(context_tensor, max_new_tokens=self.prediction_length)
         # The output shape is [batch_size, context_length + prediction_length]
-        normed_predictions = output[:, -self.prediction_length:]
-        # Inverse normalization
-        predictions = normed_predictions * std + mean
+        predictions = output[:, -self.prediction_length:]
         # Convert predictions to a 1D numpy array
         predictions_np = predictions.squeeze(0).cpu().numpy()
 
         return predictions_np, ground_truth
+
 
     def calculate_metrics(self, predictions: np.ndarray, ground_truth: np.ndarray) -> dict:
         # Compute MAE and RMSE
