@@ -193,14 +193,31 @@ class ZeroShotForecast:
         return predictions_np, ground_truth
 
     def calculate_metrics(self, predictions: np.ndarray, ground_truth: np.ndarray) -> dict:
-        # Standard metrics: MAE and RMSE
+        # Compute MAE and RMSE
         mae = np.mean(np.abs(predictions - ground_truth))
         mse = np.mean((predictions - ground_truth) ** 2)
         rmse = np.sqrt(mse)
-        # Compute naive forecast error from training data (mean absolute difference)
-        naive_error = np.mean(np.abs(np.diff(self.training_data)))
-        mase = mae / (naive_error + 1e-8)
-        return {"RMSE": float(rmse), "MAE": float(mae), "MASE": float(mase)}
+        
+        # Compute MAPE (Mean Absolute Percentage Error)
+        # Adding a small constant (1e-8) to avoid division by zero
+        mape = np.mean(np.abs((predictions - ground_truth) / (ground_truth + 1e-8))) * 100
+        
+        # Compute R2 Score
+        ss_res = np.sum((ground_truth - predictions) ** 2)
+        ss_tot = np.sum((ground_truth - np.mean(ground_truth)) ** 2)
+        r2 = 1 - (ss_res / (ss_tot + 1e-8))
+        
+        # Compute Explained Variance
+        explained_variance = 1 - np.var(ground_truth - predictions) / (np.var(ground_truth) + 1e-8)
+        
+        return {
+            "RMSE": float(rmse),
+            "MAE": float(mae),
+            "MAPE": float(mape),
+            "R2": float(r2),
+            "Explained Variance": float(explained_variance)
+        }
+
 
     def plot_results(self, predictions: np.ndarray, ground_truth: np.ndarray) -> str:
         plt.figure(figsize=(10, 5))
