@@ -16,7 +16,7 @@ def download_hf_repo(repo_id, local_dir):
 def modify_config(time_MoE_directory: str):
     with open(f"{time_MoE_directory}/config.json", "r") as config:
         data = json.load(config)
-    data["horizon_lengths"] = [32, 64, 128]
+    data["horizon_lengths"] = [1, 8, 32, 64, 128]
     with open(f"{time_MoE_directory}/config.json", "w") as config:
         json.dump(obj=data, fp=config)
     with open(f"{time_MoE_directory}/config.json", "r") as config:
