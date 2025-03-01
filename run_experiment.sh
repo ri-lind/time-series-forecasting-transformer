@@ -92,7 +92,6 @@ if [ "$SETUP_ONLY" = true ]; then
         setup_env
     else
         cd "$REPO_DIR" || exit
-        # Only run pip install if virtual environment not already set up
         if [ ! -d "colab_env" ]; then
             setup_env
         else
@@ -103,7 +102,7 @@ if [ "$SETUP_ONLY" = true ]; then
     exit 0
 fi
 
-# Ensure exactly one data flag is provided (only if not running setup-only)
+# Ensure exactly one data flag is provided
 flag_count=0
 if [ -n "$CITY" ]; then flag_count=$((flag_count+1)); fi
 if [ "$USE_FINANCE" = true ]; then flag_count=$((flag_count+1)); fi
@@ -127,46 +126,41 @@ else
     echo "Repository directory exists. Skipping pip install."
 fi
 
-# Preprocessing and training/model execution based on provided argument
+# Set the model directory variable.
+MODEL_DIR="/content/downloaded-time-moe"
+# Download the HF repo and modify configuration.
+python3 setup_timemoe_model.py --absolute_model_location "$MODEL_DIR"
+
+# Data preprocessing based on provided argument.
 if [ "$USE_FINANCE" = true ]; then
     FILE_SUFFIX="finance"
     echo "Running finance data preprocessing..."
     python3 pre_processing/collect_process.py --finance
-    if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    else
-        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    fi
 elif [ "$USE_ENERGY" = true ]; then
     FILE_SUFFIX="energy"
     echo "Running energy data preprocessing for year: $YEAR..."
     python3 pre_processing/collect_process.py --energy --year "$YEAR"
-    if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    else
-        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    fi
 elif [ -n "$USE_HEALTHCARE" ]; then
     FILE_SUFFIX="$USE_HEALTHCARE"
     echo "Running healthcare data preprocessing for country: $USE_HEALTHCARE..."
     python3 pre_processing/collect_process.py -h "$USE_HEALTHCARE"
-    if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    else
-        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    fi
 elif [ -n "$CITY" ]; then
     FILE_SUFFIX="$CITY"
     echo "Running weather data preprocessing for city: $CITY..."
     python3 pre_processing/collect_process.py --city "$CITY"
-    if [ "$USE_GPU" = true ]; then
-        python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    else
-        python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o /content/time-moe/${FILE_SUFFIX}
-    fi
 fi
 
-python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
-python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
-python run_eval.py -m /content/time-moe/${FILE_SUFFIX} -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 256
+# Set output directory for model saving; this can be reused in subsequent calls.
+OUTPUT_DIR="/content/time-moe/${FILE_SUFFIX}"
 
+# Call main.py using the same command irrespective of data flag.
+if [ "$USE_GPU" = true ]; then
+    python torch_dist_run.py main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o "$OUTPUT_DIR" -m "$MODEL_DIR"
+else
+    python3 main.py -d "/content/jsonl/training_${FILE_SUFFIX}.jsonl" --save_only_model -o "$OUTPUT_DIR" -m "$MODEL_DIR"
+fi
+
+# Run evaluation for different context/prediction lengths.
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 256
