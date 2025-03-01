@@ -310,6 +310,15 @@ def evaluate(args):
         item[mape_metric.name] = mape
         item[r2_metric.name] = r2
         item[expl_var_metric.name] = explained_variance
+        
+        print(f"Context Length: {context_length}")
+        print(f"Prediction Length: {prediction_length}")
+        print(f"RMSE: {rmse}")
+        print(f"MAE: {mae}")
+        print(f"MAPE: {mape}")
+        print(f"R²: {r2}")
+        print(f"Explained Variance: {explained_variance}")
+
         logging.info(item)
 
 
