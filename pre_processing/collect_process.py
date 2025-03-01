@@ -8,8 +8,7 @@ import argparse
 import requests
 from io import StringIO
 from datetime import datetime, timedelta
-from sklearn.preprocessing import MinMaxScaler  # Import the scaler
-
+from sklearn.preprocessing import StandardScaler
 def get_weather_data(city: str) -> ArrayLike:
     path = kagglehub.dataset_download("gucci1337/weather-of-albania-last-three-years")
     years = [2021, 2022, 2023]
@@ -21,8 +20,8 @@ def get_weather_data(city: str) -> ArrayLike:
         data_frames.append(df['tavg'])
     concatenated_data = pd.concat(data_frames, ignore_index=True)
     
-    # Apply MinMaxScaler
-    scaler = MinMaxScaler()
+    # Apply StandardScaler
+    scaler = StandardScaler()
     data_reshaped = concatenated_data.values.reshape(-1, 1)
     scaled_data = scaler.fit_transform(data_reshaped).flatten()
     
@@ -37,8 +36,8 @@ def get_finance_data():
     # Assuming the second column holds the desired data.
     df = df.iloc[:, 1]
     
-    # Apply MinMaxScaler
-    scaler = MinMaxScaler()
+    # Apply StandardScaler
+    scaler = StandardScaler()
     data = df.values.reshape(-1, 1)
     scaled_data = scaler.fit_transform(data).flatten()
     
@@ -68,8 +67,8 @@ def get_consumption_data_year(year: int):
     string_values = combined_data.iloc[:, 1].values
     values_float = np.array([float(w.replace(',', '')) for w in string_values])
     
-    # Apply MinMaxScaler
-    scaler = MinMaxScaler()
+    # Apply StandardScaler
+    scaler = StandardScaler()
     scaled_values = scaler.fit_transform(values_float.reshape(-1, 1)).flatten()
     
     return scaled_values
@@ -102,8 +101,8 @@ def get_healthcare_data(country: str) -> ArrayLike:
     
     sliced_cases = new_cases[200:1200]
     
-    # Apply MinMaxScaler
-    scaler = MinMaxScaler()
+    # Apply StandardScaler
+    scaler = StandardScaler()
     scaled_cases = scaler.fit_transform(sliced_cases.reshape(-1, 1)).flatten()
     
     return scaled_cases

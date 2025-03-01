@@ -45,6 +45,7 @@ if __name__ == '__main__':
     parser.add_argument('--max_grad_norm', type=float, default=1.0, help='max gradient norm')
     parser.add_argument('--dataloader_num_workers', type=int, default=4, help='number of workers for dataloader')
 
+    parser.add_argument('--seminar-experiment', type=bool,default=False, help='Whether or not to start the experiment for the MATML seminar')
     args = parser.parse_args()
 
     if args.normalization_method == 'none':
