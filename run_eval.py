@@ -27,53 +27,110 @@ def count_num_tensor_elements(tensor):
     return n
 
 
-# ------------------ Metrics ------------------
+# ------------------ Base Metric ------------------
 class SumEvalMetric:
     def __init__(self, name, init_val: float = 0.0):
         self.name = name
         self.value = init_val
+        self.count = 0  # count of elements (tokens)
 
-    def push(self, preds, labels, **kwargs):
+    def push(self, preds: torch.Tensor, labels: torch.Tensor, **kwargs):
+        n = preds.numel()
+        self.count += n
         self.value += self._calculate(preds, labels, **kwargs)
 
-    def _calculate(self, preds, labels, **kwargs):
+    def _calculate(self, preds: torch.Tensor, labels: torch.Tensor, **kwargs):
+        raise NotImplementedError
+
+    def compute(self):
         raise NotImplementedError
 
 
-class MSEMetric(SumEvalMetric):
+# ------------------ RMSE Metric ------------------
+class RMSEMetric(SumEvalMetric):
     def _calculate(self, preds, labels, **kwargs):
+        # Sum squared error for this push
         return torch.sum((preds - labels) ** 2)
 
+    def compute(self):
+        # Compute RMSE from accumulated squared error and count
+        mse = self.value / self.count
+        return torch.sqrt(mse)
 
+
+# ------------------ MAE Metric ------------------
 class MAEMetric(SumEvalMetric):
     def _calculate(self, preds, labels, **kwargs):
         return torch.sum(torch.abs(preds - labels))
 
+    def compute(self):
+        return self.value / self.count
 
-class MASEMetric(SumEvalMetric):
-    def __init__(self, name, init_val: float = 0.0):
+
+# ------------------ MAPE Metric ------------------
+class MAPEMetric(SumEvalMetric):
+    def __init__(self, name, init_val: float = 0.0, epsilon: float = 1e-8):
         super().__init__(name, init_val)
-        self.num_sequences = 0
-
-    def push(self, preds, labels, **kwargs):
-        # For MASE, we count the number of sequences (i.e. batch size)
-        batch_size = labels.shape[0]
-        self.num_sequences += batch_size
-        self.value += self._calculate(preds, labels, **kwargs)
+        self.epsilon = epsilon
 
     def _calculate(self, preds, labels, **kwargs):
-        # Assume labels has shape (batch, prediction_length)
-        batch_size, pred_len = labels.shape
-        abs_errors = torch.abs(preds - labels)         # shape: (batch, prediction_length)
-        mae_per_seq = torch.mean(abs_errors, dim=1)      # (batch,)
-        # Compute naive forecast error per sequence as the mean absolute difference
-        # between consecutive values in the ground-truth labels.
-        if pred_len < 2:
-            naive_error = torch.ones(batch_size, device=labels.device)
-        else:
-            naive_error = torch.mean(torch.abs(labels[:, 1:] - labels[:, :-1]), dim=1)
-        mase = mae_per_seq / (naive_error + 1e-8)        # (batch,)
-        return torch.sum(mase)
+        return torch.sum(torch.abs((preds - labels) / (labels + self.epsilon)))
+
+    def compute(self):
+        # This returns the mean absolute percentage error (as a fraction)
+        return self.value / self.count
+
+
+# ------------------ R2 Metric ------------------
+class R2Metric:
+    def __init__(self, name):
+        self.name = name
+        self.sse = 0.0        # Sum of squared errors: sum((labels - preds)^2)
+        self.sum_y = 0.0      # Sum of labels
+        self.sum_y2 = 0.0     # Sum of labels squared
+        self.count = 0        # Number of elements
+
+    def push(self, preds: torch.Tensor, labels: torch.Tensor, **kwargs):
+        self.sse += torch.sum((labels - preds) ** 2)
+        self.sum_y += torch.sum(labels)
+        self.sum_y2 += torch.sum(labels ** 2)
+        self.count += labels.numel()
+
+    def compute(self):
+        # Compute total sum of squares (SST)
+        sst = self.sum_y2 - (self.sum_y ** 2) / self.count
+        # Avoid division by zero
+        if sst == 0:
+            return torch.tensor(0.0)
+        return 1 - (self.sse / sst)
+
+
+# ------------------ Explained Variance Metric ------------------
+class ExplainedVarianceMetric:
+    def __init__(self, name):
+        self.name = name
+        self.sum_errors = 0.0   # Sum of (labels - preds)
+        self.sum_error2 = 0.0   # Sum of squared errors
+        self.sum_y = 0.0        # Sum of labels
+        self.sum_y2 = 0.0       # Sum of labels squared
+        self.count = 0          # Number of elements
+
+    def push(self, preds: torch.Tensor, labels: torch.Tensor, **kwargs):
+        errors = labels - preds
+        self.sum_errors += torch.sum(errors)
+        self.sum_error2 += torch.sum(errors ** 2)
+        self.sum_y += torch.sum(labels)
+        self.sum_y2 += torch.sum(labels ** 2)
+        self.count += labels.numel()
+
+    def compute(self):
+        # Variance of errors:
+        var_errors = (self.sum_error2 - (self.sum_errors ** 2) / self.count) / self.count
+        # Variance of labels:
+        var_y = (self.sum_y2 - (self.sum_y ** 2) / self.count) / self.count
+        if var_y == 0:
+            return torch.tensor(0.0)
+        return 1 - (var_errors / var_y)
 
 
 class TimeMoE:
@@ -141,11 +198,16 @@ def evaluate(args):
         device = 'cpu'
         is_dist = False
 
-    # evaluation metrics: note that for MSE and MAE we count tokens, but for MASE we count sequences.
-    mse_metric = MSEMetric(name='mse')
+    # ------------------ Metrics ------------------
+    mse_metric = RMSEMetric(name='rmse')  # Will compute RMSE
     mae_metric = MAEMetric(name='mae')
-    mase_metric = MASEMetric(name='mase')
-    metric_list = [mse_metric, mae_metric, mase_metric]
+    mape_metric = MAPEMetric(name='mape')
+    r2_metric = R2Metric(name='r2')
+    expl_var_metric = ExplainedVarianceMetric(name='explained_variance')
+
+    metric_list = [mse_metric, mae_metric, mape_metric, r2_metric, expl_var_metric]
+
+    acc_count = 0  # For RMSE and MAE we count tokens
 
     model = TimeMoE(
         args.model,
@@ -173,33 +235,44 @@ def evaluate(args):
         drop_last=False,
     )
 
-    acc_count = 0  # for MSE and MAE (total number of tokens)
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(test_dl)):
             preds, labels = model.predict(batch)
-
+            # (Assume preds and labels have matching shapes.)
             mse_metric.push(preds, labels)
             mae_metric.push(preds, labels)
-            mase_metric.push(preds, labels)
-
+            mape_metric.push(preds, labels)
+            r2_metric.push(preds, labels)
+            expl_var_metric.push(preds, labels)
             acc_count += count_num_tensor_elements(preds)
 
-    # For MSE and MAE, average error per token; for MASE, average error per sequence.
-    ret_metric = {}
-    ret_metric[mse_metric.name] = mse_metric.value / acc_count
-    ret_metric[mae_metric.name] = mae_metric.value / acc_count
-    ret_metric[mase_metric.name] = mase_metric.value / mase_metric.num_sequences
-
-    print(f'{rank} - {ret_metric}')
-
-    metric_tensors = [mse_metric.value, mae_metric.value, mase_metric.value, acc_count]
+    # Gather distributed statistics.
+    # For RMSE, MAE, and MAPE we need: mse_metric.value, mae_metric.value, mape_metric.value, and token count.
+    # For R², we need: r2_metric.sse, r2_metric.sum_y, r2_metric.sum_y2, and r2_metric.count.
+    # For Explained Variance, we need: expl_var_metric.sum_error2, expl_var_metric.sum_errors,
+    # expl_var_metric.sum_y, expl_var_metric.sum_y2, and expl_var_metric.count.
+    metric_tensors = [
+        mse_metric.value, 
+        mae_metric.value, 
+        mape_metric.value, 
+        torch.tensor(acc_count, device=model.device),
+        r2_metric.sse, 
+        r2_metric.sum_y, 
+        r2_metric.sum_y2, 
+        torch.tensor(r2_metric.count, device=model.device),
+        expl_var_metric.sum_error2, 
+        expl_var_metric.sum_errors, 
+        expl_var_metric.sum_y, 
+        expl_var_metric.sum_y2, 
+        torch.tensor(expl_var_metric.count, device=model.device)
+    ]
     if is_dist:
-        stat_tensor = torch.tensor(metric_tensors).to(model.device)
+        stat_tensor = torch.stack(metric_tensors)
         gathered_results = [torch.zeros_like(stat_tensor) for _ in range(world_size)]
         dist.all_gather(gathered_results, stat_tensor)
         all_stat = torch.stack(gathered_results, dim=0).sum(dim=0)
     else:
-        all_stat = metric_tensors
+        all_stat = torch.stack(metric_tensors)
 
     if rank == 0:
         item = {
@@ -208,11 +281,35 @@ def evaluate(args):
             'context_length': args.context_length,
             'prediction_length': args.prediction_length,
         }
-        count = all_stat[-1]
-        # Use appropriate counts for each metric
-        item[mse_metric.name] = float(all_stat[0] / count)
-        item[mae_metric.name] = float(all_stat[1] / count)
-        item[mase_metric.name] = float(all_stat[2] / mase_metric.num_sequences)
+        # For RMSE, MAE, and MAPE: denominator is total token count.
+        count = all_stat[3].item()
+        rmse = torch.sqrt(all_stat[0] / count).item()
+        mae = (all_stat[1] / count).item()
+        mape = (all_stat[2] / count).item()
+
+        # For R²:
+        sse = all_stat[4].item()
+        sum_y = all_stat[5].item()
+        sum_y2 = all_stat[6].item()
+        count_r2 = all_stat[7].item()
+        sst = sum_y2 - (sum_y ** 2) / count_r2 if count_r2 > 0 else 0
+        r2 = 1 - (sse / sst) if sst != 0 else 0
+
+        # For Explained Variance:
+        sum_error2 = all_stat[8].item()
+        sum_errors = all_stat[9].item()
+        sum_y_ex = all_stat[10].item()
+        sum_y2_ex = all_stat[11].item()
+        count_ex = all_stat[12].item()
+        var_errors = (sum_error2 - (sum_errors ** 2) / count_ex) / count_ex if count_ex > 0 else 0
+        var_y = (sum_y2_ex - (sum_y_ex ** 2) / count_ex) / count_ex if count_ex > 0 else 0
+        explained_variance = 1 - (var_errors / var_y) if var_y != 0 else 0
+
+        item[mse_metric.name] = rmse
+        item[mae_metric.name] = mae
+        item[mape_metric.name] = mape
+        item[r2_metric.name] = r2
+        item[expl_var_metric.name] = explained_variance
         logging.info(item)
 
 
