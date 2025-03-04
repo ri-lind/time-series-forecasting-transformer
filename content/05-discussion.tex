@@ -1,0 +1,57 @@
+\chapter{Discussion}\label{ch05:discussion}
+
+\section{Transformer Models vs. Regression Baselines}
+The results confirm that transformer-based models consistently outperform traditional regression models, particularly for longer forecasting horizons. Both \textbf{SAMFormer} and \textbf{TimeGPT} demonstrate superior accuracy, especially in datasets with strong temporal dependencies such as weather and energy forecasting. By contrast, regression models, including \textbf{Linear Regression} and \textbf{Random Forest}, perform well for short-term predictions but degrade significantly when the forecasting horizon extends, due to their limited capacity to model complex temporal relationships.
+
+Among the transformer models, \textbf{TimeGPT} excels in short-term forecasting by efficiently capturing immediate temporal patterns. However, its effectiveness diminishes over longer horizons. In contrast, \textbf{SAMFormer} delivers the most stable performance across all datasets and forecasting horizons. Traditional regression models remain viable for short-term predictions but struggle to generalize beyond short time spans.
+
+\section{The Impact of Forecasting Horizon Length}
+Across all datasets, extending the forecasting horizon from H32 to H128 results in a general decline in model accuracy. This effect is particularly pronounced in \textbf{TimesFM} and traditional regression models, which struggle to capture long-term dependencies. Conversely, \textbf{SAMFormer} and \textbf{TimeGPT} experience the least performance degradation, indicating that transformer architectures effectively leverage attention mechanisms to retain and process historical patterns over extended forecasting horizons.
+
+While \textbf{TimeGPT} performs well for short-term predictions, its accuracy deteriorates at longer horizons, suggesting a limitation in its ability to generalize over extended future periods. \textbf{SAMFormer}, in contrast, maintains stable performance, reinforcing its reliability for long-term forecasting. \textbf{TimesFM} experiences the steepest decline in performance, further confirming its difficulty in handling complex time dependencies.
+
+\section{Dataset-Specific Performance}
+The effectiveness of different models varies across datasets:
+
+\textbf{Weather Forecasting:} \textbf{TimeGPT} provides the lowest RMSE in short-term forecasts, making it well-suited for immediate weather predictions. However, \textbf{SAMFormer} is the most consistent performer across all forecasting horizons, ensuring reliable long-term predictions.
+
+\textbf{Financial Forecasting:} \textbf{SAMFormer} outperforms other models, likely due to its ability to capture market fluctuations. In contrast, \textbf{TimesFM} and traditional regression models perform poorly, potentially due to the high volatility inherent in financial data.
+
+\textbf{Energy Forecasting:} Transformer-based models significantly outperform regression baselines, with \textbf{SAMFormer} demonstrating the most stable predictions. The ability of attention mechanisms to capture seasonality and consumption trends likely contributes to this success.
+
+\textbf{Healthcare Forecasting (COVID-19 Cases):} \textbf{Time-MoE} performs particularly well in handling irregular time-series patterns, such as fluctuating COVID-19 case counts. This suggests that mixture-of-experts models may be effective in domains with significant temporal variability.
+
+Overall, transformer-based models, while powerful, face challenges with highly volatile datasets like financial markets, often requiring additional stabilization techniques to enhance their forecasting accuracy. Conversely, datasets exhibiting clear seasonal and cyclical patterns, such as those related to weather and energy consumption, tend to benefit more from attention-based architectures inherent in transformers, effectively capturing temporal dependencies. Traditional regression models, though effective for structured datasets with short-term dependencies, often struggle with long-term forecasting due to their limited capacity to model complex temporal dynamics..
+
+\section{Fine-Tuning and Model Performance}
+
+The evaluation results indicate that the benefits of fine-tuning vary significantly across datasets and models. For example, in weather forecasting, fine-tuning improved the performance of transformer-based models such as \textbf{TimeGPT} and \textbf{TimesFM} for short-term horizons (e.g., Horizon 32), whereas the pre-trained \textbf{Time-MoE} already exhibited very competitive performance in its zeroshot configuration. In the finance domain, however, fine-tuning led to only marginal differences, with \textbf{TimeGPT} achieving nearly identical error metrics between its fine-tuned and zeroshot modes.
+
+For energy forecasting, fine-tuning brought noticeable improvements for \textbf{TimesFM}, reducing forecasting errors, while \textbf{TimeGPT} maintained similar performance levels across both settings. Interestingly, in healthcare forecasting, the zeroshot models frequently outperformed their fine-tuned counterparts, suggesting that additional fine-tuning may not be beneficial for these tasks.
+
+Overall, while fine-tuning can yield significant gains for certain transformer models and datasets—particularly where pre-training alone does not capture all domain-specific dynamics—the improvements are not uniform. This underscores the importance of carefully evaluating the trade-offs and domain-specific characteristics when deciding to fine-tune pre-trained models.
+
+\section{Answering the RQs}
+
+In this section, we address the formulated research questions by breaking them down into their sub-questions.
+
+\textbf{RQ1: Model performance across datasets} \\[1mm]
+\textbf{RQ1.1: Which model performs best across all datasets?}\\
+\noindent \textbf{SAMFormer} is the most stable and reliable model across all datasets, consistently delivering strong performance.\\[2mm]
+\textbf{RQ1.2: Which model performs best for each specific dataset?}\\
+\noindent In specific domains, \textbf{TimeGPT} excels in short-term weather forecasting, while \textbf{Time-MoE} is particularly effective in handling irregular time-series patterns in healthcare data.
+
+\vspace{2mm}
+\textbf{RQ2: Model performance across forecasting horizons} \\[1mm]
+\textbf{RQ2.1: Which model performs best across all forecasting horizons?}\\
+\noindent \textbf{TimeGPT} performs best for short-term forecasting, whereas \textbf{SAMFormer} demonstrates robustness over mid-to-long-term horizons.\\[2mm]
+\textbf{RQ2.2: Which model performs best for each specific forecasting horizon?}\\
+\noindent For longer forecasting horizons, the performance of \textbf{TimesFM} deteriorates significantly, indicating that it struggles as the forecast period increases.
+
+\vspace{2mm}
+\textbf{RQ3: Effect of fine-tuning foundation models} \\[1mm]
+\noindent Fine-tuning yields mixed improvements: it benefits \textbf{TimeGPT} and, in some cases, \textbf{Time-MoE} for long-term forecasting with RMSE reductions of up to 15\%, while gains in finance and healthcare are minimal; \textbf{TimesFM} remains suboptimal even after fine-tuning, indicating inherent architectural limitations.
+
+\vspace{2mm}
+\textbf{RQ4: Transformers vs. traditional ML methods} \\[1mm]
+\noindent Transformer-based models, particularly \textbf{SAMFormer} and \textbf{TimeGPT}, outperform traditional regression models, especially for longer forecasting horizons. Regression models remain viable for short-term, low-complexity forecasting but struggle with capturing long-range dependencies.

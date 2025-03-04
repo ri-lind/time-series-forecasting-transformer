@@ -1,0 +1,33 @@
+# LaTeX build files
+*.aux
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.toc
+*.lot
+*.lof
+*.lol
+*.synctex.gz
+*.synctex(busy)
+*.nav
+*.snm
+
+# Temporary files
+*~
+*.bak
+*.backup
+
+# Generated PDF files (if you don't want to track them)
+*.pdf
+
+# If you use a separate build directory
+build/
+
+# Editor and IDE folders (e.g., VS Code)
+.vscode/
+*.code-workspace

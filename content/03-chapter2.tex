@@ -1,0 +1,77 @@
+\chapter{Methodology} \label{ch03:methodology}
+
+\section{Experimental Setup}
+
+This study evaluates forecasting models across four distinct time series datasets: weather, finance, energy, and healthcare. Each dataset contains domain-specific information such as daily temperature records, historical stock prices, electricity consumption, and COVID-19 case counts. To ensure consistency, datasets undergo individual preprocessing, including missing value handling via removal or interpolation, financial data adjustment based on the \texttt{Adjusted Close} price, energy data cleansing to resolve formatting issues and missing points, and healthcare data interpolation with range restriction. The datasets are partitioned chronologically, with 60\% allocated for training and the remaining 40\% for testing. Input sequences span 64, 128, or 256 time steps, while forecasting horizons are set at 32, 64, or 128 time steps.
+
+\begin{table}[ht]
+\centering
+\caption{Summary of Datasets and Training Configuration}
+\begin{tabular}{|p{4cm}|p{8cm}|}
+\hline
+\textbf{Aspect} & \textbf{Details} \\
+\hline
+Datasets & Weather, Finance, Energy, Healthcare \\
+\hline
+Input Sequences & 64, 128, 256 time steps \\
+\hline
+Forecasting Horizons & 32, 64, 128 time steps \\
+\hline
+Train-Test Split & 60\% training, 40\% testing (chronological) \\
+\hline
+Computational Resources & Google Colab GPUs (T4) with mixed precision (\texttt{fp16}) \\
+\hline
+\end{tabular}
+\label{tab:datasets_training}
+\end{table}
+
+
+\section{Training Configuration}
+
+Experiments are conducted on Google Colab using T4 GPUs with mixed precision (\texttt{fp16}). Memory management techniques, such as garbage collection and PyTorch CUDA optimizations, are employed, particularly for TimesFM, which demands high GPU memory. Hyperparameter tuning is performed using \texttt{Optuna} to optimize learning rates between 1e-4 and 1e-2, weight decay between 1e-6 and 1e-3, and batch sizes of 32, 64, or 128. SAMFormer and TimesFM undergo fine-tuning via \texttt{Optuna}, while TimeGPT receives minimal fine-tuning of 10 steps with a fine-tune depth of 5.
+
+\section{Models Used}
+
+This study benchmarks deep learning models such as SAMFormer, TimesFM, Time-MoE, and TimeGPT, alongside traditional regression models, including Linear Regression, Random Forest, Extra Trees, MLP Regressor, Linear SVR, and HistGradient Boosting. SAMFormer is optimized with the \texttt{Adam} optimizer for 100 epochs and fine-tuned using \texttt{Optuna}. TimesFM utilizes varying batch sizes and \texttt{Optuna} tuning. Time-MoE is trained using a script-based approach with a maximum sequence length of 1024 and a global batch size of 64, leveraging \texttt{DeepSpeed} for efficiency. TimeGPT undergoes limited fine-tuning to adapt pretrained parameters to each dataset.
+
+\begin{table}[ht]
+\centering
+\caption{Model Configurations}
+\begin{tabular}{|p{4cm}|p{8cm}|}
+\hline
+\textbf{Model} & \textbf{Configuration Details} \\
+\hline
+SAMFormer & Adam optimizer, 100 epochs, Optuna hyperparameter tuning \\
+\hline
+TimesFM & Varying batch sizes, Optuna hyperparameter tuning \\
+\hline
+Time-MoE & Script-based training, max sequence length of 1024, global batch size of 64, DeepSpeed optimization \\
+\hline
+TimeGPT & Limited fine-tuning (10 steps, fine-tune depth of 5) \\
+\hline
+\end{tabular}
+\label{tab:model_configs}
+\end{table}
+
+\section{Evaluation Metrics}
+
+Forecasting accuracy is assessed using error-based metrics such as Root Mean Squared Error (RMSE), Mean Absolute Error (MAE), and Mean Absolute Percentage Error (MAPE), alongside distribution-based metrics including R-squared (R²) and Explained Variance Score. A simple train-test split of 60\%-40\% is applied without cross-validation.
+
+\begin{table}[ht]
+\centering
+\caption{Evaluation Metrics Used}
+\begin{tabular}{|p{4cm}|p{8cm}|}
+\hline
+\textbf{Metric Type} & \textbf{Metrics} \\
+\hline
+Error-Based & RMSE, MAE, MAPE \\
+\hline
+Distribution-Based & R², Explained Variance Score \\
+\hline
+\end{tabular}
+\label{tab:evaluation_metrics}
+\end{table}
+
+\section{Implementation Considerations}
+
+Several challenges and optimizations were encountered during implementation. TimesFM required rigorous GPU memory management, including frequent CUDA memory clearing and Python garbage collection. Outdated implementations in SAMFormer, TimesFM, and Time-MoE led to conflicts with dependencies and unclear guides, necessitating code modifications. Linear interpolation was applied for missing values, while hyperparameter tuning was used for SAMFormer and TimesFM. However, no additional optimizations such as gradient accumulation or early stopping were implemented. These considerations ensured that models were effectively trained and evaluated under a consistent experimental framework.

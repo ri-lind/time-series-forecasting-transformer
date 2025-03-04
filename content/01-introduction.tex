@@ -1,0 +1,44 @@
+\chapter{Introduction}\label{ch01:intro}
+
+Over the years, time-series forecasting has become an increasingly vital task, as demonstrated by the substantial interest from both research and industry. The ability to predict future values based on past observations holds significant value across various domains, enabling applications such as financial forecasting for cost reductions and profit maximization, or energy consumption optimization in the energy sector \cite{jin2023timellm, Papastefanopoulos2023MultivariateTF}. Accurate forecasting can lead to substantial benefits, reinforcing the need for robust predictive models.
+
+The growing interest in time-series forecasting has driven continuous advancements in state-of-the-art models that claim to improve predictive accuracy over previous approaches \cite{li2023generativetimeseriesforecasting}. While traditional models primarily rely on supervised learning, recent progress in deep learning has led to the adoption of transformer architectures, initially developed for natural language processing. Despite their success in NLP, transformer-based approaches for time-series forecasting have yielded mixed results, and the underlying reasons for their performance variations remain an active area of investigation \cite{PuspitaSari2024SeaLT}. This paper aims to compare the performance of several transformer-based models with traditional machine learning methods, evaluating their strengths and limitations across diverse datasets and forecasting horizons.
+
+To this end, we examine and compare four transformer-based approaches:
+
+\textbf{SAMFormer} is a lightweight transformer architecture designed for long-term multivariate time-series forecasting. It integrates a shallow transformer encoder, channel-wise attention, reversible instance normalization (RevIN), and sharpness-aware minimization (SAM) \cite{Huang2024LeRetLR}. The latter is particularly emphasized as a key factor in the model's strong performance. 
+
+\textbf{TimesFM} is a foundation model employing a decoder-only architecture for univariate forecasting. It predicts in patches of 32 time steps and is pre-trained on a vast dataset, including synthetic time-series data, Google Trends, and Wikipedia Pageviews \cite{Fisher2024TimeseriesFM}. Its strong zeroshot performance suggests generalization capabilities beyond supervised models.
+
+\textbf{Time-MoE} is a mixture-of-experts (MoE) foundation model scaled to 2.4 billion parameters, trained on 300 billion time-series points across nine domains. It supports arbitrary prediction and context lengths, making it a flexible choice for various forecasting tasks \cite{Xie2024TemporalMB}. 
+\textbf{TimeGPT} is a proprietary time-series foundation model based on transformers. TimeGPT is designed to perform both zeroshot and fine-tuned forecasting, leveraging its large-scale pretraining to capture complex temporal patterns \cite{Garza2023TimeGPT}.
+
+
+To comprehensively evaluate these models, we compare them across four diverse datasets and three different context–prediction length pairs. As a benchmark, we include traditional machine learning methods such as Linear Regression, MLPRegressor, and ensemble techniques. This setup allows us to assess the absolute forecasting performance of transformer-based models while also determining their ability to capture underlying temporal structures relative to conventional approaches \cite{machines12060380}.
+
+\section{Research Goal and Sub-Research Questions}
+
+The main objective of this research is to compare the performance of transformer-based time-series forecasting models against each other and against traditional machine learning methods. To structure our analysis, we define the following sub-research questions:
+
+\textbf{RQ1:} What is model performance across datasets?
+\begin{itemize}
+    \item \textbf{RQ1.1:} Which model performs best across all datasets?
+    \item \textbf{RQ1.2:} Which model performs best for each specific dataset?
+\end{itemize}
+    
+\textbf{RQ2:} What is model performance across different forecasting horizons?
+\begin{itemize}
+    \item \textbf{RQ2.1:} Which model performs best across all forecasting horizons?
+    \item \textbf{RQ2.2:} Which model performs best for each specific forecasting horizon?
+\end{itemize}
+    
+\textbf{RQ3:} Does fine-tuning foundation models (TimeGPT, TimesFM, and Time-MoE) lead to performance improvements?
+    
+\textbf{RQ4:} Are transformer-based models superior to traditional machine learning methods for time-series forecasting?
+
+
+
+\section{Paper Structure}
+
+This paper is structured as follows. Section 2 provides background information on time-series forecasting, with a focus on transformers as a novel approach in the field. Section 3 outlines the experimental setup, including datasets, evaluation metrics, and training methodologies. Section 4 presents the results of our experiments, followed by a discussion in Section 5. Finally, Section 6 concludes the paper and provides directions for future research.
+
