@@ -660,14 +660,112 @@ TimesFM    & 0.8237 & 0.6699 & 3.8703  & -16.4243 & -7.5461 \\
 
 \chapter{Appendix: Graphs for Models}\label{appendixB}
 
-\section{SAMFormer}
-\section{TimesFM}
-\section{TimeGPT}
-\subsection{Weather}
-\subsection{Energy}
-\subsection{Finance}
-\subsection{Healthcare}
-\section{Time-MoE}
+\section{Transformer Models}
+
+\subsection{SAMFormer}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/weather_pred_len_32_sample_-1.png}
+         \caption{Weather - Horizon 32}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/weather_pred_len_64_sample_-1.png}
+         \caption{Weather - Horizon 64}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/weather_pred_len_128_sample_-1.png}
+         \caption{Weather - Horizon 128}
+    \end{subfigure}
+    \caption{SAMFormer predictions on Weather dataset.}
+\end{figure}
+
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/finance_pred_len_32_sample_-1.png}
+         \caption{Finance - Horizon 32}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/finance_pred_len_64_sample_-1.png}
+         \caption{Finance - Horizon 64}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/samformer/finance_pred_len_128_sample_-1.png}
+         \caption{Finance - Horizon 128}
+    \end{subfigure}
+    \caption{SAMFormer predictions on Finance dataset.}
+\end{figure}
+
+\subsection{TimesFM}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timesfm/weather_predictions_exp1.png}
+         \caption{Weather - Exp 1}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timesfm/weather_predictions_exp2.png}
+         \caption{Weather - Exp 2}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timesfm/weather_predictions_exp3.png}
+         \caption{Weather - Exp 3}
+    \end{subfigure}
+    \caption{TimesFM predictions on Weather dataset.}
+\end{figure}
+
+\subsection{TimeGPT}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timegpt/weather_32_forecast_plot.png}
+         \caption{Weather - Horizon 32}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timegpt/weather_64_forecast_plot.png}
+         \caption{Weather - Horizon 64}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/timegpt/weather_128_forecast_plot.png}
+         \caption{Weather - Horizon 128}
+    \end{subfigure}
+    \caption{TimeGPT predictions on Weather dataset.}
+\end{figure}
+
+\subsection{Time-MoE}
+\begin{figure}[h!]
+    \centering
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/time-moe/finance_64_32.png}
+         \caption{Finance - Horizon 64$\to$32}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/time-moe/finance_128_64.png}
+         \caption{Finance - Horizon 128$\to$64}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.32\textwidth}
+         \centering
+         \includegraphics[width=\textwidth]{figures/time-moe/finance_256_128.png}
+         \caption{Finance - Horizon 256$\to$128}
+    \end{subfigure}
+    \caption{Time-MoE predictions on Finance dataset.}
+\end{figure}
+
 \section{Regressors}
 
 %---------------------------------------------------------
