@@ -161,6 +161,6 @@ else
 fi
 
 # Run evaluation for different context/prediction lengths.
-python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64
-python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128
-python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 256
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 32 --context_length 64 --plot_name "${FILE_SUFFIX}_64_32"
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 64 --context_length 128 --plot_name "${FILE_SUFFIX}_128_64"
+python run_eval.py -m "$OUTPUT_DIR" -d /content/csv/test_${FILE_SUFFIX}.csv --prediction_length 128 --context_length 256 --plot_name "${FILE_SUFFIX}_256_128"

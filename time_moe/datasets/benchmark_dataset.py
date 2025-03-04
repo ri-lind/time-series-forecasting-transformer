@@ -53,12 +53,12 @@ class BenchmarkEvalDataset(Dataset):
         test_data = df_values[border1s[2]:border2s[2]]
 
         # Scaling: fit on the whole dataset and transform.
-        scaler = StandardScaler()
-        scaler.fit(test_data)
-        scaled_test_data = scaler.transform(test_data)
+        #scaler = StandardScaler()
+        #scaler.fit(test_data)
+        #scaled_test_data = scaler.transform(test_data)
 
         # Assignment: transpose so that each sequence becomes a row.
-        self.hf_dataset = scaled_test_data.transpose(1, 0)
+        self.hf_dataset = test_data.transpose(1, 0)
         self.num_sequences = len(self.hf_dataset)
         self.window_length = self.context_length + self.prediction_length
 

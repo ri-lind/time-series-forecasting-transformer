@@ -9,6 +9,7 @@ import torch
 import torch.distributed as dist
 from torch.utils.data import DistributedSampler, DataLoader
 from tqdm import tqdm
+import matplotlib.pyplot as plt
 
 from transformers import AutoModelForCausalLM
 
@@ -175,11 +176,38 @@ class TimeMoE:
         return preds, labels
 
 
+def plot_performance(plot_name: str, input: np.array, preds: np.array, labels: np.array):
+    plt.figure(figsize=(10, 5))
+    
+    # Define the x-axis for past values and forecast
+    x_input = np.arange(len(input))
+    x_forecast = np.arange(len(input), len(input) + len(labels))
+    
+    # Plot past values using their natural indices
+    plt.plot(x_input, input, label="Past Values", marker="o")
+    
+    # Plot ground truth and forecast starting after past values
+    plt.plot(x_forecast, labels, label="Ground Truth", marker="o")
+    plt.plot(x_forecast, preds, label="Forecast", marker="x")
+    
+    plt.xlabel("Time Step")
+    plt.ylabel("Value")
+    plt.title("Forecast vs. Ground Truth")
+    plt.legend()
+    
+    plot_path = f"{plot_name}.png"
+    plt.savefig(plot_path)
+    plt.close()
+    print(f"Plot saved to {plot_path}")
+    return plot_path
+
+
 def evaluate(args):
     batch_size = args.batch_size
     context_length = args.context_length
     prediction_length = args.prediction_length
-
+    plot_name = args.plot_name
+    
     master_addr = os.getenv('MASTER_ADDR', '127.0.0.1')
     master_port = os.getenv('MASTER_PORT', 9899)
     world_size = int(os.getenv('WORLD_SIZE') or 1)
@@ -234,11 +262,16 @@ def evaluate(args):
         prefetch_factor=2,
         drop_last=False,
     )
-
+    plotted = False # for 
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(test_dl)):
             preds, labels = model.predict(batch)
             # (Assume preds and labels have matching shapes.)
+            input = batch["inputs"].to(model.device).to(model.model.dtype)
+            # insert plotting method
+            if not plotted:
+                plot_performance(plot_name, input, preds, labels)
+                plotted = True
             mse_metric.push(preds, labels)
             mae_metric.push(preds, labels)
             mape_metric.push(preds, labels)
@@ -351,6 +384,13 @@ if __name__ == '__main__':
         type=int,
         default=96,
         help='Prediction length'
+    )
+    
+    parser.add_argument(
+        '--plot_name', '-n',
+        type=str,
+        default="",
+        help='Name of Plot to be created'
     )
     args = parser.parse_args()
     if args.context_length is None:
