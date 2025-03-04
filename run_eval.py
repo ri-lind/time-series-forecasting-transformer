@@ -195,11 +195,11 @@ def plot_performance(plot_name: str, input, preds, labels):
     x_forecast = np.arange(len(input), len(input) + len(labels))
     
     # Plot past values using their natural indices
-    plt.plot(x_input, input, label="Past Values", marker="o")
+    plt.plot(x_input, input[0], label="Past Values", marker="o")
     
     # Plot ground truth and forecast starting after past values
-    plt.plot(x_forecast, labels, label="Ground Truth", marker="o")
-    plt.plot(x_forecast, preds, label="Forecast", marker="x")
+    plt.plot(x_forecast, labels[0], label="Ground Truth", marker="o")
+    plt.plot(x_forecast, preds[0], label="Forecast", marker="x")
     
     plt.xlabel("Time Step")
     plt.ylabel("Value")
