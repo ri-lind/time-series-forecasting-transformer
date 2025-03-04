@@ -192,7 +192,7 @@ def plot_performance(plot_name: str, input, preds, labels):
     
     # Define the x-axis for past values and forecast
     x_input = np.arange(len(input[0]))
-    x_forecast = np.arange(len(input[0]), len(input) + len(labels))
+    x_forecast = np.arange(len(input[0]), len(input[0]) + len(labels[0]))
     
     # Plot past values using their natural indices
     plt.plot(x_input, input[0], label="Past Values", marker="o")
