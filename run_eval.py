@@ -176,8 +176,19 @@ class TimeMoE:
         return preds, labels
 
 
-def plot_performance(plot_name: str, input: np.array, preds: np.array, labels: np.array):
+import numpy as np
+import matplotlib.pyplot as plt
+
+def plot_performance(plot_name: str, input, preds, labels):
     plt.figure(figsize=(10, 5))
+    
+    # Convert to numpy if tensors
+    if isinstance(input, torch.Tensor):
+        input = input.cpu().numpy()
+    if isinstance(preds, torch.Tensor):
+        preds = preds.cpu().numpy()
+    if isinstance(labels, torch.Tensor):
+        labels = labels.cpu().numpy()
     
     # Define the x-axis for past values and forecast
     x_input = np.arange(len(input))
@@ -199,7 +210,9 @@ def plot_performance(plot_name: str, input: np.array, preds: np.array, labels: n
     plt.savefig(plot_path)
     plt.close()
     print(f"Plot saved to {plot_path}")
+    
     return plot_path
+
 
 
 def evaluate(args):
