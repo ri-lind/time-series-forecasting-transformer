@@ -1,0 +1,14 @@
+#### Foundation Models for Time-Series Forecasting
+
+
+Welcome! This repository has been created as part of the work of the seminar Advanced Topics in Machine Learning from the Department of Information Systems at the University of Münster.
+
+The goal of this research repository is to act as a documentation of the implemenation accompanying the paper Foundation Models for Time-Series Forecasting, the goal of which is to compare 4 transformer-based models for time-series forecasting.
+
+
+The repo consists of the following branches:
+
+*main: This branch, containing a readme with explanations.
+training-and-testing-notebooks: The most important branch, containing the Jupyter Notebooks ran on Google Colab in order to train and test, as well as zero-shot or fine-tune models on 4 datasets. The data 
+colabsamformer: The forked SAMFormer repository, one of the models used in the research report. The code has been modified so that the model could be correctly run.
+timesfm (deprecated):
