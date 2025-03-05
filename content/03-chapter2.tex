@@ -32,7 +32,7 @@ Experiments are conducted on Google Colab using T4 GPUs with mixed precision (\t
 
 \section{Models Used}
 
-This study benchmarks deep learning models such as SAMFormer, TimesFM, Time-MoE, and TimeGPT, alongside traditional regression models, including Linear Regression, Random Forest, Extra Trees, MLP Regressor, Linear SVR, and HistGradient Boosting. SAMFormer is optimized with the \texttt{Adam} optimizer for 100 epochs and fine-tuned using \texttt{Optuna}. TimesFM utilizes varying batch sizes and \texttt{Optuna} tuning. Time-MoE is trained using a script-based approach with a maximum sequence length of 1024 and a global batch size of 64, leveraging \texttt{DeepSpeed} for efficiency. TimeGPT undergoes limited fine-tuning to adapt pretrained parameters to each dataset.
+This study benchmarks deep learning models such as SAMFormer, TimesFM, Time-MoE, and TimeGPT, alongside traditional regression models, including Linear Regression, Random Forest, Extra Trees, MLP Regressor, Linear SVR, and HistGradient Boosting. SAMFormer is optimized with the \texttt{Adam} optimizer for 100 epochs and fine-tuned using \texttt{Optuna}. TimesFM utilizes varying batch sizes and \texttt{Optuna} tuning. Time-MoE is trained using a script-based approach with a maximum sequence length of 1024 and a global batch size of 64, leveraging \texttt{DeepSpeed} for efficiency. TimeGPT undergoes limited fine-tuning to adapt pretrained parameters to each dataset. Also look at Appendix \ref{appendixC}.
 
 \begin{table}[ht]
 \centering

@@ -86,6 +86,8 @@ For \textbf{Energy} forecasting, fine-tuning substantially benefits \textbf{Time
 
 Finally, in \textbf{Healthcare} forecasting, all models tend to achieve lower forecasting errors in the zeroshot configuration. For instance, \textbf{TimeGPT} has an RMSE of 0.7071 in zeroshot mode compared to 2.9776 when fine-tuned. Similarly, both \textbf{Time-MoE} and \textbf{TimesFM} yield lower errors in their zeroshot versions, indicating that additional fine-tuning may not be beneficial for these models in healthcare tasks.
 
+The varying explained variance scores (see Appendix \ref{appendixA}) highlight the varying impact of fine-tuning across models and domains. Fine-tuning improved \textbf{TimeGPT} and \textbf{TimesFM} in weather forecasting but had little effect in finance, where zeroshot models performed similarly. In healthcare, zeroshot models often had higher explained variance, suggesting that fine-tuning may introduce overfitting rather than improving generalization.
+
 \begin{figure}[ht]
     \centering
     \begin{minipage}{0.32\textwidth}
