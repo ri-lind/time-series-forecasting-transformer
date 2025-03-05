@@ -22,7 +22,7 @@ Additionally, hybrid architectures that combine transformers with other deep lea
 
 \section{Specific Transformer-Based Models}\label{sec:specificmodels}
 
-In this section, we provide a detailed overview of the four transformer-based models examined in this paper: SAMFormer, TimesFM, TimeGPT and Time-MoE. Each model represents a unique approach to time-series forecasting,since they each leverage different architectural innovations and pretraining strategies.
+In this section, we provide a detailed overview of the four transformer-based models examined in this paper: SAMFormer, TimesFM, TimeGPT and Time-MoE. Each model represents a unique approach to time-series forecasting,since they each leverage different architectural innovations and pre-training strategies.
 
 \subsection{SAMFormer}
 
@@ -39,7 +39,7 @@ Another distinctive aspect of SAMFormer is its integration of Reversible Instanc
 
 \subsection{TimesFM}
 
-TimesFM is a decoder-only foundation model developed for univariate time-series forecasting. The model processes time-series data in patches, typically consisting of 32 time points, and is pretrained on a mixture of synthetic and real-world datasets. The synthetic data is generated from simulations or statistical models, while the real-world data includes large-scale datasets such as Google Trends and Wikipedia Pageviews. This extensive pretraining enables TimesFM to perform zero-shot forecasting, allowing it to generalize to new datasets without additional task-specific training \cite{das2024decoderonlyfoundationmodeltimeseries}.
+TimesFM is a decoder-only foundation model developed for univariate time-series forecasting. The model processes time-series data in patches, typically consisting of 32 time points, and is pre-trained on a mixture of synthetic and real-world datasets. The synthetic data is generated from simulations or statistical models, while the real-world data includes large-scale datasets such as Google Trends and Wikipedia Pageviews. This extensive pre-training enables TimesFM to perform zero-shot forecasting, allowing it to generalize to new datasets without additional task-specific training \cite{das2024decoderonlyfoundationmodeltimeseries}.
 
 \begin{figure}[ht]
     \centering
@@ -52,15 +52,15 @@ TimesFM's decoder-only architecture contributes to its computational efficiency 
 
 \subsection{Time-MoE}
 
-Time-MoE is a family of decoder-only time-series foundation models that leverage a mixture-of-experts (MoE) architecture to achieve scalable forecasting performance. The model scales up to 2.4 billion parameters and is trained on a massive dataset comprising over 300 billion time points across nine different domains. This extensive pretraining allows Time-MoE to handle arbitrary context and prediction lengths, making it highly adaptable to diverse forecasting scenarios \cite{Shi2025TimeMoE}.
+Time-MoE is a family of decoder-only time-series foundation models that leverage a mixture-of-experts (MoE) architecture to achieve scalable forecasting performance. The model scales up to 2.4 billion parameters and is trained on a massive dataset comprising over 300 billion time points across nine different domains. This extensive pre-training allows Time-MoE to handle arbitrary context and prediction lengths, making it highly adaptable to diverse forecasting scenarios \cite{Shi2025TimeMoE}.
 
 The mixture-of-experts framework in Time-MoE dynamically allocates computational resources across different subsets of the input, enhancing the model's ability to capture intricate temporal patterns \cite{Shi2025TimeMoE}. This is particularly beneficial in applications that require high scalability and adaptability, such as financial market forecasting or energy demand prediction \cite{Wang2023VE}. Time-MoE's ability to model complex temporal dynamics across multiple domains makes it a powerful tool for real-world forecasting tasks \cite{Shi2025TimeMoE}.
 
 \subsection{TimeGPT}
 
-TimeGPT utilizes a transformer-based architecture with self-attention mechanisms, structured in an encoder-decoder format comprising multiple layers enhanced by residual connections and layer normalization. This design enables the model to effectively process historical data and generate accurate forecasts. A linear layer maps the decoder's output to the forecasting window's dimensions, facilitating precise predictions. TimeGPT is capable of handling various input sizes and forecasting horizons, adapting to different time series characteristics \cite{Garza2023TimeGPT}.
+TimeGPT utilizes a transformer-based architecture with self-attention mechanisms, structured in an encoder-decoder format comprising multiple layers enhanced by residual connections and layer normalization. This design enables the model to effectively process historical data and generate accurate forecasts. A linear layer maps the decoder's output to the forecasting window's dimensions, facilitating precise predictions. TimeGPT is capable of handling various input sizes and forecasting horizons, adapting to different time-series characteristics \cite{Garza2023TimeGPT}.
 
-Trained on the largest collection of publicly available time series datasets at the time of training, encompassing over 100 billion data points from domains such as finance, healthcare, and IoT sensor data, TimeGPT captures a wide array of temporal patterns. In empirical evaluations, TimeGPT's zero-shot inference demonstrated superior performance, efficiency, and simplicity compared to established statistical, machine learning, and deep learning methods \cite{Garza2023TimeGPT}. These results underscore its robustness and versatility in time series forecasting applications.
+Trained on the largest collection of publicly available time-series datasets at the time of training, encompassing over 100 billion data points from domains such as finance, healthcare, and IoT sensor data, TimeGPT captures a wide array of temporal patterns. In empirical evaluations, TimeGPT's zero-shot inference demonstrated superior performance, efficiency, and simplicity compared to established statistical, machine learning, and deep learning methods \cite{Garza2023TimeGPT}. These results underscore its robustness and versatility in time-series forecasting applications.
 
 
 \section{Broader Evaluations and Surveys}
@@ -71,4 +71,4 @@ Meyer et al. (2024) benchmarked foundation models (Chronos, TimesFM, LagLlama) a
 
 Kim et al. (2024) provide a comprehensive survey of modern time-series forecasting, noting the rise of Transformers and foundation models in the field~\cite{kim2024survey}. They discuss how earlier simple models sometimes rivaled Transformers, but the newest innovations—including hybrid architectures and large pre-trained models—are driving a “renaissance” in forecasting research~\cite{kim2024survey}. This aligns with the emergence of SAMformer, TimeGPT, TimesFM, and Time-MoE, which collectively represent the latest trends: improving core Transformer training and scaling models via massive data pre-training.
 
-These studies illustrate both the potential and limitations of transformer-based architectures in time-series forecasting. While foundation models demonstrate competitive performance and practical advantages like zero-shot inference, their improvements over specialized models are often marginal and highly dependent on dataset characteristics. The reliance on large-scale pretraining raises questions about efficiency and accessibility, particularly for domains with limited data. In the following methodology section, we outline the experimental setup, evaluation criteria, and datasets used to systematically compare these models.
+These studies illustrate both the potential and limitations of transformer-based architectures in time-series forecasting. While foundation models demonstrate competitive performance and practical advantages like zero-shot inference, their improvements over specialized models are often marginal and highly dependent on dataset characteristics. The reliance on large-scale pre-training raises questions about efficiency and accessibility, particularly for domains with limited data. In the following methodology section, we outline the experimental setup, evaluation criteria, and datasets used to systematically compare these models.

@@ -2,7 +2,7 @@
 
 \section{Experimental Setup}
 
-This study evaluates forecasting models across four distinct time series datasets: weather, finance, energy, and healthcare. Each dataset contains domain-specific information such as daily temperature records, historical stock prices, electricity consumption, and COVID-19 case counts. To ensure consistency, datasets undergo individual preprocessing, including missing value handling via removal or interpolation, financial data adjustment based on the \texttt{Adjusted Close} price, energy data cleansing to resolve formatting issues and missing points, and healthcare data interpolation with range restriction. The datasets are partitioned chronologically, with 60\% allocated for training and the remaining 40\% for testing. Input sequences span 64, 128, or 256 time steps, while forecasting horizons are set at 32, 64, or 128 time steps.
+This study evaluates forecasting models across four distinct time-series datasets: weather, finance, energy, and healthcare. Each dataset contains domain-specific information such as daily temperature records, historical stock prices, electricity consumption, and COVID-19 case counts. To ensure consistency, datasets undergo individual preprocessing, including missing value handling via removal or interpolation, financial data adjustment based on the \texttt{Adjusted Close} price, energy data cleansing to resolve formatting issues and missing points, and healthcare data interpolation with range restriction. The datasets are partitioned chronologically, with 60\% allocated for training and the remaining 40\% for testing. Input sequences span 64, 128, or 256 time steps, while forecasting horizons are set at 32, 64, or 128 time steps.
 
 \begin{table}[ht]
 \centering
@@ -32,7 +32,7 @@ Experiments are conducted on Google Colab using T4 GPUs with mixed precision (\t
 
 \section{Models Used}
 
-This study benchmarks deep learning models such as SAMFormer, TimesFM, Time-MoE, and TimeGPT, alongside traditional regression models, including Linear Regression, Random Forest, Extra Trees, MLP Regressor, Linear SVR, and HistGradient Boosting. SAMFormer is optimized with the \texttt{Adam} optimizer for 100 epochs and fine-tuned using \texttt{Optuna}. TimesFM utilizes varying batch sizes and \texttt{Optuna} tuning. Time-MoE is trained using a script-based approach with a maximum sequence length of 1024 and a global batch size of 64, leveraging \texttt{DeepSpeed} for efficiency. TimeGPT undergoes limited fine-tuning to adapt pretrained parameters to each dataset. Also look at Appendix \ref{appendixC}.
+This study benchmarks deep learning models such as SAMFormer, TimesFM, Time-MoE, and TimeGPT, alongside traditional regression models, including Linear Regression, Random Forest, Extra Trees, MLP Regressor, Linear SVR, and HistGradient Boosting. SAMFormer is optimized with the \texttt{Adam} optimizer for 100 epochs and fine-tuned using \texttt{Optuna}. TimesFM utilizes varying batch sizes and \texttt{Optuna} tuning. Time-MoE is trained using a script-based approach with a maximum sequence length of 1024 and a global batch size of 64, leveraging \texttt{DeepSpeed} for efficiency. TimeGPT undergoes limited fine-tuning to adapt pre-trained parameters to each dataset. Also look at Appendix \ref{appendixC}.
 
 \begin{table}[ht]
 \centering

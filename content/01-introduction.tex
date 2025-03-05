@@ -8,10 +8,10 @@ To this end, we examine and compare four transformer-based approaches:
 
 \textbf{SAMFormer} is a lightweight transformer architecture designed for long-term multivariate time-series forecasting. It integrates a shallow transformer encoder, channel-wise attention, reversible instance normalization (RevIN), and sharpness-aware minimization (SAM) \cite{Huang2024LeRetLR}. The latter is particularly emphasized as a key factor in the model's strong performance. 
 
-\textbf{TimesFM} is a foundation model employing a decoder-only architecture for univariate forecasting. It predicts in patches of 32 time steps and is pre-trained on a vast dataset, including synthetic time-series data, Google Trends, and Wikipedia Pageviews \cite{Fisher2024TimeseriesFM}. Its strong zeroshot performance suggests generalization capabilities beyond supervised models.
+\textbf{TimesFM} is a foundation model employing a decoder-only architecture for univariate forecasting. It predicts in patches of 32 time steps and is pre-trained on a vast dataset, including synthetic time-series data, Google Trends, and Wikipedia Pageviews \cite{Fisher2024TimeseriesFM}. Its strong zero-shot performance suggests generalization capabilities beyond supervised models.
 
 \textbf{Time-MoE} is a mixture-of-experts (MoE) foundation model scaled to 2.4 billion parameters, trained on 300 billion time-series points across nine domains. It supports arbitrary prediction and context lengths, making it a flexible choice for various forecasting tasks \cite{Xie2024TemporalMB}. 
-\textbf{TimeGPT} is a proprietary time-series foundation model based on transformers. TimeGPT is designed to perform both zeroshot and fine-tuned forecasting, leveraging its large-scale pretraining to capture complex temporal patterns \cite{Garza2023TimeGPT}.
+\textbf{TimeGPT} is a proprietary time-series foundation model based on transformers. TimeGPT is designed to perform both zero-shot and fine-tuned forecasting, leveraging its large-scale pre-training to capture complex temporal patterns \cite{Garza2023TimeGPT}.
 
 
 To comprehensively evaluate these models, we compare them across four diverse datasets and three different context–prediction length pairs. As a benchmark, we include traditional machine learning methods such as Linear Regression, MLPRegressor, and ensemble techniques. This setup allows us to assess the absolute forecasting performance of transformer-based models while also determining their ability to capture underlying temporal structures relative to conventional approaches \cite{machines12060380}.

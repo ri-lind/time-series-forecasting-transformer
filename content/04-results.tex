@@ -74,19 +74,19 @@ Increasing the forecasting horizon from 32 to 128 steps generally results in red
 Traditional regression models, including \textbf{Linear Regression}, \textbf{Random Forest}, \textbf{Extra Trees}, and \textbf{MLP}, serve as baselines for comparison. Among these, \textbf{Linear Regression} performs well in short-term forecasts, particularly at a horizon of 32, but its accuracy declines significantly as the forecasting horizon extends. The most consistent regression model across different datasets is the \textbf{Extra Trees Regressor}, which maintains relatively stable performance. On the other hand, \textbf{Linear SVR} struggles the most, failing to capture nonlinear temporal trends effectively, making it the least reliable regression model in this evaluation.
 
 
-\section{Fine-Tuning vs. Zeroshot Performance}
+\section{Fine-Tuning vs. Zero-shot Performance}
 
-The impact of fine-tuning relative to zeroshot performance varies considerably across datasets and forecasting horizons, as well as by model.
+The impact of fine-tuning relative to zero-shot performance varies considerably across datasets and forecasting horizons, as well as by model.
 
-For \textbf{Weather} forecasting, fine-tuning improves the performance of models like \textbf{TimeGPT} and \textbf{TimesFM} (e.g., TimeGPT achieves an RMSE of 0.1475 in fine-tuned mode versus 0.2045 in zeroshot for Horizon 32). However, the pre-trained \textbf{Time-MoE} model shows a much lower RMSE in the zeroshot setting (0.1300 for Horizon 32) than when fine-tuned (0.4824), suggesting that its pre-trained weights are already well-calibrated for short-term weather forecasting.
+For \textbf{Weather} forecasting, fine-tuning improves the performance of models like \textbf{TimeGPT} and \textbf{TimesFM} (e.g., TimeGPT achieves an RMSE of 0.1475 in fine-tuned mode versus 0.2045 in zero-shot for Horizon 32). However, the pre-trained \textbf{Time-MoE} model shows a much lower RMSE in the zero-shot setting (0.1300 for Horizon 32) than when fine-tuned (0.4824), suggesting that its pre-trained weights are already well-calibrated for short-term weather forecasting.
 
-In the \textbf{Finance} domain, \textbf{TimeGPT} delivers nearly identical performance in both settings (e.g., RMSE around 0.0197 for Horizon 32), while \textbf{Time-MoE} and \textbf{TimesFM} exhibit only marginal differences between fine-tuned and zeroshot modes, with no clear overall advantage from fine-tuning.
+In the \textbf{Finance} domain, \textbf{TimeGPT} delivers nearly identical performance in both settings (e.g., RMSE around 0.0197 for Horizon 32), while \textbf{Time-MoE} and \textbf{TimesFM} exhibit only marginal differences between fine-tuned and zero-shot modes, with no clear overall advantage from fine-tuning.
 
-For \textbf{Energy} forecasting, fine-tuning substantially benefits \textbf{TimesFM} (reducing its RMSE from approximately 1.1627 in zeroshot mode to 0.5790 in fine-tuned mode). In contrast, \textbf{TimeGPT} shows slightly better performance in the zeroshot setting, and \textbf{Time-MoE} performs comparably in both modes.
+For \textbf{Energy} forecasting, fine-tuning substantially benefits \textbf{TimesFM} (reducing its RMSE from approximately 1.1627 in zero-shot mode to 0.5790 in fine-tuned mode). In contrast, \textbf{TimeGPT} shows slightly better performance in the zero-shot setting, and \textbf{Time-MoE} performs comparably in both modes.
 
-Finally, in \textbf{Healthcare} forecasting, all models tend to achieve lower forecasting errors in the zeroshot configuration. For instance, \textbf{TimeGPT} has an RMSE of 0.7071 in zeroshot mode compared to 2.9776 when fine-tuned. Similarly, both \textbf{Time-MoE} and \textbf{TimesFM} yield lower errors in their zeroshot versions, indicating that additional fine-tuning may not be beneficial for these models in healthcare tasks.
+Finally, in \textbf{Healthcare} forecasting, all models tend to achieve lower forecasting errors in the zero-shot configuration. For instance, \textbf{TimeGPT} has an RMSE of 0.7071 in zero-shot mode compared to 2.9776 when fine-tuned. Similarly, both \textbf{Time-MoE} and \textbf{TimesFM} yield lower errors in their zero-shot versions, indicating that additional fine-tuning may not be beneficial for these models in healthcare tasks.
 
-The varying explained variance scores (see Appendix \ref{appendixA}) highlight the varying impact of fine-tuning across models and domains. Fine-tuning improved \textbf{TimeGPT} and \textbf{TimesFM} in weather forecasting but had little effect in finance, where zeroshot models performed similarly. In healthcare, zeroshot models often had higher explained variance, suggesting that fine-tuning may introduce overfitting rather than improving generalization.
+The varying explained variance scores (see Appendix \ref{appendixA}) highlight the varying impact of fine-tuning across models and domains. Fine-tuning improved \textbf{TimeGPT} and \textbf{TimesFM} in weather forecasting but had little effect in finance, where zero-shot models performed similarly. In healthcare, zero-shot models often had higher explained variance, suggesting that fine-tuning may introduce overfitting rather than improving generalization.
 
 \begin{figure}[ht]
     \centering
@@ -107,4 +107,4 @@ The varying explained variance scores (see Appendix \ref{appendixA}) highlight t
 \end{figure}
 
 
-Overall, while fine-tuning can yield improvements—most notably for \textbf{TimeGPT} in weather and energy forecasting and for \textbf{TimesFM} in energy forecasting—the advantages of fine-tuning are not uniform across all models and datasets. In several cases, particularly in finance and healthcare, the zeroshot performance is competitive or even superior. In the case of Time-MoE, finetuning did not yield any apparent performance increases.
+Overall, while fine-tuning can yield improvements—most notably for \textbf{TimeGPT} in weather and energy forecasting and for \textbf{TimesFM} in energy forecasting—the advantages of fine-tuning are not uniform across all models and datasets. In several cases, particularly in finance and healthcare, the zero-shot performance is competitive or even superior. In the case of Time-MoE, fine-tuning did not yield any apparent performance increases.
